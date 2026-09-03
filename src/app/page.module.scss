@@ -1,0 +1,122 @@
+.hero {
+  min-height: 100vh;
+  background: linear-gradient(
+    165deg,
+    var(--color-primary) 0%,
+    var(--color-primary-light) 100%
+  );
+  color: var(--color-white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8) var(--space-4);
+}
+
+.container {
+  max-width: 720px;
+  text-align: center;
+}
+
+.tagline {
+  font-size: 0.95rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.85;
+  margin-bottom: var(--space-4);
+  color: #94a3b8;
+}
+
+.title {
+  font-size: clamp(1.75rem, 5vw, 2.75rem);
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: var(--space-5);
+  color: var(--color-white);
+}
+
+.subtitle {
+  font-size: 1.125rem;
+  line-height: 1.6;
+  opacity: 0.9;
+  margin-bottom: var(--space-8);
+  color: #cbd5e1;
+}
+
+.ctaRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  justify-content: center;
+  margin-bottom: var(--space-12);
+}
+
+.ctaPrimary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.875rem 1.75rem;
+  background-color: var(--color-accent);
+  color: var(--color-white);
+  font-weight: 600;
+  font-size: 1rem;
+  border-radius: var(--radius-md);
+  transition: background-color 0.15s ease, transform 0.15s ease;
+
+  &:hover {
+    background-color: var(--color-accent-hover);
+    color: var(--color-white);
+    transform: translateY(-1px);
+  }
+}
+
+.ctaSecondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.875rem 1.75rem;
+  background-color: transparent;
+  color: var(--color-white);
+  font-weight: 600;
+  font-size: 1rem;
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  border-radius: var(--radius-md);
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.6);
+    color: var(--color-white);
+  }
+}
+
+.pillars {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-6);
+  text-align: left;
+}
+
+@media (min-width: 640px) {
+  .pillars {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.pillar {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+
+  h3 {
+    font-size: 1rem;
+    color: var(--color-white);
+    margin-bottom: var(--space-2);
+  }
+
+  p {
+    font-size: 0.9rem;
+    color: #94a3b8;
+    line-height: 1.5;
+  }
+}
