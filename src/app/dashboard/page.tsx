@@ -4,17 +4,28 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { User } from "firebase/auth";
+import {
+  collection,
+  query,
+  orderBy,
+  onSnapshot,
+  Timestamp,
+} from "firebase/firestore";
 import BottomNav from "@/components/layout/BottomNav";
 import { subscribeToAuth, ensureUserProfile } from "@/lib/auth";
-import { UserProfile } from "@/types";
+import { db } from "@/lib/firebase";
+import { UserProfile, Opportunity } from "@/types";
 import styles from "./dashboard.module.scss";
 
 export default function DashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeFilter, setActiveFilter] = useState("all");
 
+  // Auth + Profile
   useEffect(() => {
     const unsubscribe = subscribeToAuth(async (firebaseUser) => {
       if (!firebaseUser) {
@@ -29,13 +40,112 @@ export default function DashboardPage() {
         setProfile(userProfile);
       } catch (err) {
         console.error("Error loading profile:", err);
-      } finally {
-        setLoading(false);
       }
     });
 
     return () => unsubscribe();
   }, [router]);
+
+  // Real-time opportunities from Firestore
+  useEffect(() => {
+    const q = query(
+      collection(db, "opportunities"),
+      orderBy("createdAt", "desc")
+    );
+
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const list: Opportunity[] = [];
+
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          list.push({
+            id: doc.id,
+            providerId: data.providerId,
+            providerName: data.providerName,
+            type: data.type,
+            title: data.title,
+            description: data.description,
+            skillsRequired: data.skillsRequired || [],
+            location: data.location,
+            isRemote: data.isRemote || false,
+            compensation: data.compensation,
+            duration: data.duration,
+            status: data.status,
+            createdAt:
+              data.createdAt instanceof Timestamp
+                ? data.createdAt.toMillis()
+                : Date.now(),
+            updatedAt:
+              data.updatedAt instanceof Timestamp
+                ? data.updatedAt.toMillis()
+                : Date.now(),
+            applicationCount: data.applicationCount || 0,
+          });
+        });
+
+        setOpportunities(list);
+        setLoading(false);
+      },
+      (err) => {
+        console.error("Error fetching opportunities:", err);
+        setLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
+  }, []);
+
+  const filteredOpportunities =
+    activeFilter === "all"
+      ? opportunities
+      : opportunities.filter((opp) => {
+          if (activeFilter === "paid") return opp.type === "paid_project";
+          if (activeFilter === "challenge") return opp.type === "challenge";
+          if (activeFilter === "guidance")
+            return opp.type === "guidance" || opp.type === "portfolio_review";
+          if (activeFilter === "internship") return opp.type === "internship";
+          return true;
+        });
+
+  const stats = [
+    {
+      label: "Open Opportunities",
+      value: String(opportunities.length),
+      trend: opportunities.length > 0 ? "Live now" : "None yet",
+    },
+    {
+      label: "Your Applications",
+      value: "0",
+      trend: "Coming soon",
+    },
+    {
+      label: "Completed",
+      value: "0",
+      trend: "Start your first",
+    },
+    {
+      label: "Reputation",
+      value: String(profile?.reputationScore || 50),
+      trend: "New member",
+    },
+  ];
+
+  const formatType = (type: string) => {
+    const map: Record<string, string> = {
+      paid_project: "Paid Project",
+      internship: "Internship",
+      challenge: "Challenge",
+      guidance: "Guidance",
+      portfolio_review: "Portfolio Review",
+      research: "Research",
+      collaboration: "Collaboration",
+      volunteering: "Volunteering",
+      recruitment: "Recruitment",
+    };
+    return map[type] || type;
+  };
 
   if (loading) {
     return (
@@ -44,44 +154,6 @@ export default function DashboardPage() {
       </div>
     );
   }
-
-  // Temporary static data (we will replace with real Firestore data later)
-  const stats = [
-    { label: "Open Opportunities", value: "12", trend: "+3 this week" },
-    { label: "Your Applications", value: "0", trend: "None yet" },
-    { label: "Completed", value: "0", trend: "Start your first" },
-    { label: "Reputation", value: String(profile?.reputationScore || 50), trend: "New member" },
-  ];
-
-  const opportunities = [
-    {
-      id: "1",
-      type: "Paid Project",
-      title: "Digitize paper inventory for local store",
-      provider: "Sharma General Store",
-      location: "South Delhi",
-      compensation: "₹2,500",
-      skills: ["Data Entry", "Excel"],
-    },
-    {
-      id: "2",
-      type: "Challenge",
-      title: "Test our new food delivery app",
-      provider: "QuickBite Startup",
-      location: "Remote",
-      compensation: "Certificate + Swag",
-      skills: ["Mobile Testing", "Feedback"],
-    },
-    {
-      id: "3",
-      type: "Guidance",
-      title: "30-min startup idea review",
-      provider: "Aarav · Founder",
-      location: "Online",
-      compensation: "Free",
-      skills: ["Business", "Validation"],
-    },
-  ];
 
   return (
     <>
@@ -113,8 +185,15 @@ export default function DashboardPage() {
         <div className={styles.content}>
           {/* Welcome */}
           <div className={styles.welcome}>
-            <h1>Welcome{profile?.displayName ? `, ${profile.displayName}` : ""}</h1>
-            <p>Role: {profile?.role === "provider" ? "Opportunity Provider" : "Opportunity Seeker"}</p>
+            <h1>
+              Welcome{profile?.displayName ? `, ${profile.displayName}` : ""}
+            </h1>
+            <p>
+              Role:{" "}
+              {profile?.role === "provider"
+                ? "Opportunity Provider"
+                : "Opportunity Seeker"}
+            </p>
           </div>
 
           {/* Stats */}
@@ -133,11 +212,46 @@ export default function DashboardPage() {
           {/* Filters */}
           <section className={styles.filtersSection}>
             <div className={styles.filters}>
-              <button className={`${styles.filterChip} ${styles.active}`}>All</button>
-              <button className={styles.filterChip}>Paid Projects</button>
-              <button className={styles.filterChip}>Challenges</button>
-              <button className={styles.filterChip}>Guidance</button>
-              <button className={styles.filterChip}>Internships</button>
+              <button
+                className={`${styles.filterChip} ${
+                  activeFilter === "all" ? styles.active : ""
+                }`}
+                onClick={() => setActiveFilter("all")}
+              >
+                All
+              </button>
+              <button
+                className={`${styles.filterChip} ${
+                  activeFilter === "paid" ? styles.active : ""
+                }`}
+                onClick={() => setActiveFilter("paid")}
+              >
+                Paid Projects
+              </button>
+              <button
+                className={`${styles.filterChip} ${
+                  activeFilter === "challenge" ? styles.active : ""
+                }`}
+                onClick={() => setActiveFilter("challenge")}
+              >
+                Challenges
+              </button>
+              <button
+                className={`${styles.filterChip} ${
+                  activeFilter === "guidance" ? styles.active : ""
+                }`}
+                onClick={() => setActiveFilter("guidance")}
+              >
+                Guidance
+              </button>
+              <button
+                className={`${styles.filterChip} ${
+                  activeFilter === "internship" ? styles.active : ""
+                }`}
+                onClick={() => setActiveFilter("internship")}
+              >
+                Internships
+              </button>
             </div>
           </section>
 
@@ -150,32 +264,51 @@ export default function DashboardPage() {
               </Link>
             </div>
 
-            <div className={styles.feed}>
-              {opportunities.map((opp) => (
-                <article key={opp.id} className={styles.card}>
-                  <div className={styles.cardTop}>
-                    <span className={styles.typeBadge}>{opp.type}</span>
-                    <span className={styles.location}>{opp.location}</span>
-                  </div>
-
-                  <h3 className={styles.cardTitle}>{opp.title}</h3>
-                  <p className={styles.provider}>{opp.provider}</p>
-
-                  <div className={styles.skills}>
-                    {opp.skills.map((skill) => (
-                      <span key={skill} className={styles.skillPill}>
-                        {skill}
+            {filteredOpportunities.length === 0 ? (
+              <div className={styles.emptyState}>
+                <h3>No opportunities yet</h3>
+                <p>
+                  Be the first to post one. Real opportunities from local
+                  businesses and professionals will appear here.
+                </p>
+                <Link href="/dashboard/create" className={styles.postBtn}>
+                  + Post the first opportunity
+                </Link>
+              </div>
+            ) : (
+              <div className={styles.feed}>
+                {filteredOpportunities.map((opp) => (
+                  <article key={opp.id} className={styles.card}>
+                    <div className={styles.cardTop}>
+                      <span className={styles.typeBadge}>
+                        {formatType(opp.type)}
                       </span>
-                    ))}
-                  </div>
+                      <span className={styles.location}>
+                        {opp.isRemote ? "Remote" : opp.location}
+                      </span>
+                    </div>
 
-                  <div className={styles.cardFooter}>
-                    <span className={styles.compensation}>{opp.compensation}</span>
-                    <button className={styles.applyBtn}>View & Apply</button>
-                  </div>
-                </article>
-              ))}
-            </div>
+                    <h3 className={styles.cardTitle}>{opp.title}</h3>
+                    <p className={styles.provider}>{opp.providerName}</p>
+
+                    <div className={styles.skills}>
+                      {opp.skillsRequired?.slice(0, 4).map((skill) => (
+                        <span key={skill} className={styles.skillPill}>
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+
+                    <div className={styles.cardFooter}>
+                      <span className={styles.compensation}>
+                        {opp.compensation || "Not specified"}
+                      </span>
+                      <button className={styles.applyBtn}>View & Apply</button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
           </section>
         </div>
       </main>

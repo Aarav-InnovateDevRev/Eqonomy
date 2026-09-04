@@ -336,3 +336,23 @@
     color: var(--color-text-muted);
   }
 }
+
+.emptyState {
+  background: white;
+  border-radius: 16px;
+  padding: 3rem 1.5rem;
+  text-align: center;
+  border: 1px solid rgba(15, 23, 42, 0.05);
+
+  h3 {
+    font-size: 1.2rem;
+    margin-bottom: 0.6rem;
+  }
+
+  p {
+    color: var(--color-text-muted);
+    max-width: 360px;
+    margin: 0 auto 1.5rem;
+    line-height: 1.5;
+  }
+}
