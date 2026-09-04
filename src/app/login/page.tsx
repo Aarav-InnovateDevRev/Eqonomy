@@ -17,30 +17,27 @@ export default function LoginPage() {
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [status, setStatus] = useState(""); // for success messages
+  const [step, setStep] = useState<"intro" | "email">("intro");
 
-  // This runs when the user comes back by clicking the link in their email
+  // Handle returning from email link
   useEffect(() => {
     const completeSignIn = async () => {
       if (isSignInWithEmailLink(auth, window.location.href)) {
         let emailForSignIn = window.localStorage.getItem("emailForSignIn");
 
         if (!emailForSignIn) {
-          // User opened the link on a different device
-          emailForSignIn = window.prompt("Please provide your email for confirmation");
+          emailForSignIn = window.prompt("Please confirm your email");
         }
 
         if (emailForSignIn) {
           try {
             setLoading(true);
-            setStatus("Signing you in...");
             await signInWithEmailLink(auth, emailForSignIn, window.location.href);
             window.localStorage.removeItem("emailForSignIn");
-            setStatus("Success! Redirecting...");
             router.push("/dashboard");
-          } catch (err: any) {
+          } catch (err) {
             console.error(err);
-            setError("Failed to complete sign-in. Please try again.");
+            setError("Sign-in failed. Please try again.");
             setLoading(false);
           }
         }
@@ -50,24 +47,20 @@ export default function LoginPage() {
     completeSignIn();
   }, [router]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSendLink = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    setStatus("");
     setLoading(true);
 
     const actionCodeSettings = {
-      // This must be the page where the user will land after clicking the email link
       url: window.location.origin + "/login",
       handleCodeInApp: true,
     };
 
     try {
       await sendSignInLinkToEmail(auth, email, actionCodeSettings);
-      // Save the email locally so we can complete sign-in later
       window.localStorage.setItem("emailForSignIn", email);
       setSent(true);
-      setStatus("Magic link sent! Check your email.");
     } catch (err: any) {
       console.error(err);
       if (err.code === "auth/invalid-email") {
@@ -82,68 +75,133 @@ export default function LoginPage() {
 
   return (
     <main className={styles.page}>
-      <div className={styles.card}>
-        <Link href="/" className={styles.back}>
-          ← Back
-        </Link>
-
-        <h1 className={styles.title}>EQONOMY</h1>
-        <p className={styles.subtitle}>Passwordless Magic Link</p>
-
-        {sent ? (
-          <div className={styles.success}>
-            <h2>Check your email</h2>
-            <p>
-              We sent a sign-in link to <strong>{email}</strong>.
-            </p>
-            <p className={styles.small}>
-              Click the link in the email to enter Eqonomy.
-            </p>
-            <button
-              className={styles.secondaryBtn}
-              onClick={() => {
-                setSent(false);
-                setEmail("");
-                setStatus("");
-              }}
-            >
-              Use a different email
-            </button>
+      {/* Left / Top visual side */}
+      <section className={styles.visual}>
+        <div className={styles.visualInner}>
+          <div className={styles.logoRow}>
+            <span className={styles.logoMark}>✦</span>
+            <span className={styles.logoText}>EQONOMY</span>
           </div>
-        ) : (
-          <form onSubmit={handleSubmit} className={styles.form}>
-            <label htmlFor="email" className={styles.label}>
-              Email address
-            </label>
-            <input
-              id="email"
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              className={styles.input}
-              autoComplete="email"
-              disabled={loading}
-            />
 
-            {error && <p className={styles.error}>{error}</p>}
-            {status && <p className={styles.status}>{status}</p>}
+          <h1 className={styles.headline}>
+            Want to do It?
+          </h1>
+          <p className={styles.subheadline}>
+            Real opportunities from local businesses, startups & professionals.
+            <br />
+            No pedigree required.
+          </p>
 
-            <button
-              type="submit"
-              className={styles.primaryBtn}
-              disabled={loading || !email}
-            >
-              {loading ? "Sending link…" : "Send Magic Link"}
-            </button>
-          </form>
-        )}
+          <div className={styles.pillars}>
+            <div className={styles.pillar}>
+              <div className={styles.pillarIcon}>📍</div>
+              <div>
+                <strong>Delhi-First</strong>
+                <span>Hyper-local density</span>
+              </div>
+            </div>
+            <div className={styles.pillar}>
+              <div className={styles.pillarIcon}>🏠</div>
+              <div>
+                <strong>Hosts-First</strong>
+                <span>We onboard providers first</span>
+              </div>
+            </div>
+            <div className={styles.pillar}>
+              <div className={styles.pillarIcon}>✓</div>
+              <div>
+                <strong>Proof of Work</strong>
+                <span>Real completed projects</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
-        <p className={styles.note}>
-          No password needed. One click and you are in.
-        </p>
-      </div>
+      {/* Right / Bottom form side */}
+      <section className={styles.formSide}>
+        <div className={styles.formCard}>
+          {sent ? (
+            <div className={styles.successState}>
+              <div className={styles.successIcon}>✉️</div>
+              <h2>Check your email</h2>
+              <p>
+                We sent a magic link to<br />
+                <strong>{email}</strong>
+              </p>
+              <p className={styles.hint}>
+                Click the link to enter Eqonomy.<br />
+                (Sometimes it lands in Spam — check there too)
+              </p>
+              <button
+                className={styles.secondaryBtn}
+                onClick={() => {
+                  setSent(false);
+                  setEmail("");
+                }}
+              >
+                Use a different email
+              </button>
+            </div>
+          ) : step === "intro" ? (
+            <div className={styles.introState}>
+              <h2>Come as you are.</h2>
+              <p className={styles.introText}>
+                No long forms. No passwords.<br />
+                Just one email and you’re in.
+              </p>
+
+              <button
+                className={styles.primaryBtn}
+                onClick={() => setStep("email")}
+              >
+                Let’s Begin →
+              </button>
+
+              <p className={styles.privacy}>
+                🔒 Passwordless • Private • Delhi-first
+              </p>
+            </div>
+          ) : (
+            <form onSubmit={handleSendLink} className={styles.emailForm}>
+              <button
+                type="button"
+                className={styles.backBtn}
+                onClick={() => setStep("intro")}
+              >
+                ← Back
+              </button>
+
+              <h2>Enter your email</h2>
+              <p className={styles.formSub}>
+                We’ll send you a one-click magic link.
+              </p>
+
+              <label className={styles.label}>Email address</label>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                className={styles.input}
+                autoComplete="email"
+                disabled={loading}
+              />
+
+              {error && <p className={styles.error}>{error}</p>}
+
+              <button
+                type="submit"
+                className={styles.primaryBtn}
+                disabled={loading || !email}
+              >
+                {loading ? "Sending…" : "Send Magic Link"}
+              </button>
+            </form>
+          )}
+        </div>
+      </section>
     </main>
   );
 }
