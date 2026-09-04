@@ -310,3 +310,29 @@
     background: #1e293b;
   }
 }
+
+/* Loading */
+.loadingScreen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-secondary);
+  color: var(--color-text-muted);
+  font-size: 1.1rem;
+}
+
+/* Welcome */
+.welcome {
+  margin-bottom: 1.5rem;
+
+  h1 {
+    font-size: 1.4rem;
+    margin-bottom: 0.25rem;
+  }
+
+  p {
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+  }
+}

@@ -1,16 +1,56 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { User } from "firebase/auth";
 import BottomNav from "@/components/layout/BottomNav";
+import { subscribeToAuth, ensureUserProfile } from "@/lib/auth";
+import { UserProfile } from "@/types";
 import styles from "./dashboard.module.scss";
 
 export default function DashboardPage() {
-  // Temporary static data (we will connect to Firestore later)
+  const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = subscribeToAuth(async (firebaseUser) => {
+      if (!firebaseUser) {
+        router.push("/login");
+        return;
+      }
+
+      setUser(firebaseUser);
+
+      try {
+        const userProfile = await ensureUserProfile(firebaseUser);
+        setProfile(userProfile);
+      } catch (err) {
+        console.error("Error loading profile:", err);
+      } finally {
+        setLoading(false);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [router]);
+
+  if (loading) {
+    return (
+      <div className={styles.loadingScreen}>
+        <p>Loading Eqonomy…</p>
+      </div>
+    );
+  }
+
+  // Temporary static data (we will replace with real Firestore data later)
   const stats = [
     { label: "Open Opportunities", value: "12", trend: "+3 this week" },
-    { label: "Your Applications", value: "4", trend: "2 pending" },
-    { label: "Completed", value: "7", trend: "+1 this month" },
-    { label: "Reputation", value: "86", trend: "Good standing" },
+    { label: "Your Applications", value: "0", trend: "None yet" },
+    { label: "Completed", value: "0", trend: "Start your first" },
+    { label: "Reputation", value: String(profile?.reputationScore || 50), trend: "New member" },
   ];
 
   const opportunities = [
@@ -64,14 +104,20 @@ export default function DashboardPage() {
 
             <div className={styles.headerRight}>
               <Link href="/dashboard/profile" className={styles.avatar}>
-                A
+                {profile?.displayName?.charAt(0).toUpperCase() || "U"}
               </Link>
             </div>
           </div>
         </header>
 
         <div className={styles.content}>
-          {/* Stats Row */}
+          {/* Welcome */}
+          <div className={styles.welcome}>
+            <h1>Welcome{profile?.displayName ? `, ${profile.displayName}` : ""}</h1>
+            <p>Role: {profile?.role === "provider" ? "Opportunity Provider" : "Opportunity Seeker"}</p>
+          </div>
+
+          {/* Stats */}
           <section className={styles.statsSection}>
             <div className={styles.statsGrid}>
               {stats.map((stat) => (
@@ -87,9 +133,7 @@ export default function DashboardPage() {
           {/* Filters */}
           <section className={styles.filtersSection}>
             <div className={styles.filters}>
-              <button className={`${styles.filterChip} ${styles.active}`}>
-                All
-              </button>
+              <button className={`${styles.filterChip} ${styles.active}`}>All</button>
               <button className={styles.filterChip}>Paid Projects</button>
               <button className={styles.filterChip}>Challenges</button>
               <button className={styles.filterChip}>Guidance</button>
@@ -97,7 +141,7 @@ export default function DashboardPage() {
             </div>
           </section>
 
-          {/* Opportunity Feed */}
+          {/* Feed */}
           <section className={styles.feedSection}>
             <div className={styles.sectionHeader}>
               <h2>Opportunities in Delhi-NCR</h2>
