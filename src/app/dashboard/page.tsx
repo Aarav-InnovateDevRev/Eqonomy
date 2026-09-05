@@ -178,12 +178,20 @@ export default function DashboardPage() {
     </div>
 
     {/* Desktop Navigation Links */}
-    <nav className={styles.desktopNav}>
-      <Link href="/dashboard">Feed</Link>
-      <Link href="/dashboard/wallet">Wallet</Link>
-      <Link href="/dashboard/create">Post</Link>
-      <Link href="/dashboard/profile">Profile</Link>
-    </nav>
+<nav className={styles.desktopNav}>
+  <Link href="/dashboard">Feed</Link>
+  <a
+    href="https://ur-aura-track.vercel.app"
+    target="_blank"
+    rel="noopener noreferrer"
+  >
+    Aura Track
+  </a>
+  <Link href="/dashboard/wallet">Wallet</Link>
+  <Link href="/dashboard/create">Post</Link>
+  <Link href="/dashboard/notifications">Alerts</Link>
+  <Link href="/dashboard/profile">Profile</Link>
+</nav>
 
     <div className={styles.headerRight}>
       <Link href="/dashboard/profile" className={styles.avatar}>
