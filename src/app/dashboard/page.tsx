@@ -303,7 +303,12 @@ export default function DashboardPage() {
                       <span className={styles.compensation}>
                         {opp.compensation || "Not specified"}
                       </span>
-                      <button className={styles.applyBtn}>View & Apply</button>
+                      <Link
+                          href={`/dashboard/opportunity/${opp.id}`}
+                          className={styles.applyBtn}
+                            >
+                           View & Apply
+                     </Link>
                     </div>
                   </article>
                 ))}
