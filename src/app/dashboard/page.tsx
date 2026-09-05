@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { requestNotificationPermission } from "@/lib/notifications";
 import Link from "next/link";
 import { User } from "firebase/auth";
 import {
@@ -41,6 +42,8 @@ export default function DashboardPage() {
       } catch (err) {
         console.error("Error loading profile:", err);
       }
+
+      await requestNotificationPermission(firebaseUser.uid);
     });
 
     return () => unsubscribe();
