@@ -63,6 +63,7 @@ export interface UserProfile {
   updatedAt: number;
   completedOpportunitiesCount: number;
   reputationScore: number;
+  walletBalance?: number;
 }
 
 export interface Opportunity {

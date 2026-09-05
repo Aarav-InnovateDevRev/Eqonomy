@@ -33,18 +33,19 @@ export async function ensureUserProfile(user: User): Promise<UserProfile> {
 
   // First time login → create profile
   const newProfile: UserProfile = {
-    uid: user.uid,
-    email: user.email || "",
-    role: "seeker", // default, user can change later
-    displayName: user.email?.split("@")[0] || "User",
-    skills: [],
-    isMinor: false,
-    verificationStatus: "unverified",
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-    completedOpportunitiesCount: 0,
-    reputationScore: 50,
-  };
+  uid: user.uid,
+  email: user.email || "",
+  role: "seeker",
+  displayName: user.email?.split("@")[0] || "User",
+  skills: [],
+  isMinor: false,
+  verificationStatus: "unverified",
+  createdAt: Date.now(),
+  updatedAt: Date.now(),
+  completedOpportunitiesCount: 0,
+  reputationScore: 50,
+  walletBalance: 0, // ← new field
+};
 
   await setDoc(userRef, {
     ...newProfile,

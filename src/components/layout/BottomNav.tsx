@@ -8,8 +8,9 @@ const AURA_TRACK_URL = "https://ur-aura-track.vercel.app";
 
 const navItems = [
   { href: "/dashboard", label: "Feed", icon: "feed" },
-  { href: AURA_TRACK_URL, label: "Aura Track", icon: "aura", external: true },
+  { href: AURA_TRACK_URL, label: "Aura", icon: "aura", external: true },
   { href: "/dashboard/create", label: "Add", icon: "add", isCenter: true },
+  { href: "/dashboard/wallet", label: "Wallet", icon: "wallet" },
   { href: "/dashboard/notifications", label: "Alerts", icon: "bell" },
   { href: "/dashboard/profile", label: "Profile", icon: "profile" },
 ];

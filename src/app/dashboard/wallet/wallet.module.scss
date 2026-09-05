@@ -1,0 +1,200 @@
+.page {
+  min-height: 100vh;
+  background: #f1f5f9;
+}
+
+.loadingScreen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+}
+
+.header {
+  background: white;
+  border-bottom: 1px solid var(--color-border);
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.headerInner {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.back {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  &:hover {
+    color: var(--color-accent);
+  }
+}
+
+.header h1 {
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.content {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.balanceCard {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: white;
+  border-radius: 20px;
+  padding: 1.75rem 1.5rem;
+  text-align: center;
+}
+
+.balanceLabel {
+  font-size: 0.9rem;
+  opacity: 0.8;
+  margin-bottom: 0.4rem;
+}
+
+.balanceAmount {
+  font-size: 2.4rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.balanceNote {
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.addBtn {
+  padding: 0.9rem;
+  background: var(--color-accent);
+  color: white;
+  font-weight: 600;
+  border-radius: 12px;
+  font-size: 0.95rem;
+
+  &:disabled {
+    opacity: 0.6;
+  }
+}
+
+.redeemBtn {
+  padding: 0.9rem;
+  background: white;
+  border: 1.5px solid var(--color-border);
+  font-weight: 600;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  color: var(--color-text);
+
+  &:disabled {
+    opacity: 0.5;
+  }
+}
+
+.successMsg {
+  text-align: center;
+  color: var(--color-success);
+  font-size: 0.9rem;
+}
+
+.errorMsg {
+  text-align: center;
+  color: var(--color-danger);
+  font-size: 0.9rem;
+}
+
+.infoCard {
+  background: white;
+  border-radius: 16px;
+  padding: 1.25rem 1.4rem;
+  border: 1px solid rgba(15, 23, 42, 0.05);
+
+  h3 {
+    font-size: 0.95rem;
+    margin-bottom: 0.75rem;
+  }
+
+  ul {
+    padding-left: 1.1rem;
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+    line-height: 1.6;
+  }
+
+  li {
+    margin-bottom: 0.35rem;
+  }
+}
+
+.transactions {
+  background: white;
+  border-radius: 16px;
+  padding: 1.25rem 1.4rem;
+  border: 1px solid rgba(15, 23, 42, 0.05);
+
+  h3 {
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
+  }
+}
+
+.empty {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  text-align: center;
+  padding: 1rem 0;
+}
+
+.txList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.txItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.txDesc {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.txDate {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  margin-top: 0.15rem;
+}
+
+.txAmount {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.credit {
+  color: var(--color-success);
+}
+
+.debit {
+  color: var(--color-danger);
+}
