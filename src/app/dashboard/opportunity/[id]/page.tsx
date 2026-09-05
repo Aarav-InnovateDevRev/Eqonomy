@@ -265,7 +265,7 @@ export default function OpportunityDetailPage() {
                       This is a <strong>paid</strong> opportunity (₹{amount}).
                     </p>
                     <p>
-                      ₹{amount} will be deducted from your wallet.
+                      ₹{amount} will be credited to your wallet.
                       <br />
                       <span>Eqonomy fee (10%): ₹{Math.round(amount * 0.1)}</span>
                     </p>
