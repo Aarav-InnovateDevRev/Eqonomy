@@ -115,93 +115,39 @@ export default function OpportunityDetailPage() {
   };
 
   const handleApply = async () => {
-    if (!user || !profile || !opportunity) return;
+  if (!user || !profile || !opportunity) return;
 
-    const amount = getAmount(opportunity.compensation);
-    const isPaid = amount > 0;
+  setApplying(true);
+  setMessage("");
 
-    setApplying(true);
-    setMessage("");
+  try {
+    // Create application (NO payment at this stage)
+    await addDoc(collection(db, "applications"), {
+      opportunityId: opportunity.id,
+      seekerId: user.uid,
+      seekerName: profile.displayName || "Anonymous",
+      status: "pending",
+      coverMessage: coverMessage.trim() || "",
+      amountPaid: 0,
+      platformFee: 0,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
 
-    try {
-      // If paid opportunity → check wallet and deduct
-      if (isPaid) {
-        const currentBalance = profile.walletBalance || 0;
+    // Increase application count
+    await updateDoc(doc(db, "opportunities", opportunity.id), {
+      applicationCount: increment(1),
+    });
 
-        if (currentBalance < amount) {
-          setMessage(
-            `Insufficient balance. You need ₹${amount} but have ₹${currentBalance}. Please add money to your wallet.`
-          );
-          setApplying(false);
-          return;
-        }
-
-        const platformFee = Math.round(amount * 0.1); // 10%
-        const providerAmount = amount - platformFee;
-
-        // Deduct full amount from seeker
-        await updateDoc(doc(db, "users", user.uid), {
-          walletBalance: increment(-amount),
-          updatedAt: Date.now(),
-        });
-
-        // Record transactions
-        await addDoc(collection(db, "transactions"), {
-          userId: user.uid,
-          type: "debit",
-          amount: amount,
-          description: `Applied to: ${opportunity.title}`,
-          opportunityId: opportunity.id,
-          createdAt: serverTimestamp(),
-        });
-
-        await addDoc(collection(db, "transactions"), {
-          userId: "platform",
-          type: "fee",
-          amount: platformFee,
-          description: `10% platform fee from: ${opportunity.title}`,
-          opportunityId: opportunity.id,
-          createdAt: serverTimestamp(),
-        });
-
-        // Update local profile balance
-        setProfile({
-          ...profile,
-          walletBalance: currentBalance - amount,
-        });
-      }
-
-      // Create application
-      await addDoc(collection(db, "applications"), {
-        opportunityId: opportunity.id,
-        seekerId: user.uid,
-        seekerName: profile.displayName || "Anonymous",
-        status: "pending",
-        coverMessage: coverMessage.trim() || "",
-        amountPaid: isPaid ? amount : 0,
-        platformFee: isPaid ? Math.round(amount * 0.1) : 0,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
-
-      // Increase application count
-      await updateDoc(doc(db, "opportunities", opportunity.id), {
-        applicationCount: increment(1),
-      });
-
-      setHasApplied(true);
-      setMessage(
-        isPaid
-          ? `Application submitted! ₹${amount} deducted (10% platform fee applied).`
-          : "Application submitted successfully!"
-      );
-    } catch (err) {
-      console.error(err);
-      setMessage("Failed to apply. Please try again.");
-    } finally {
-      setApplying(false);
-    }
-  };
+    setHasApplied(true);
+    setMessage("Application submitted successfully! The host will be notified.");
+  } catch (err) {
+    console.error(err);
+    setMessage("Failed to apply. Please try again.");
+  } finally {
+    setApplying(false);
+  }
+};
 
   const formatType = (type: string) => {
     const map: Record<string, string> = {
@@ -356,13 +302,9 @@ export default function OpportunityDetailPage() {
                   onClick={handleApply}
                   className={styles.applyBtn}
                   disabled={applying}
-                >
-                  {applying
-                    ? "Submitting…"
-                    : isPaid
-                    ? `Pay ₹${amount} & Apply`
-                    : "Submit Application"}
-                </button>
+               >
+                  {applying ? "Submitting…" : "Submit Application"}
+               </button>
               </>
             )}
           </section>
