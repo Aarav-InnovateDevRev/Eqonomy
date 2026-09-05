@@ -1,19 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { collection, getDocs } from "firebase/firestore";
-import { db } from "@/lib/firebase";
-import { initializeApp, getApps, cert, App } from "firebase-admin/app";
-import { getMessaging } from "firebase-admin/messaging";
-import serviceAccount from "../../../../serviceAccountKey.json";
-
-// Initialize Firebase Admin only once
-let app: App;
-if (!getApps().length) {
-  app = initializeApp({
-    credential: cert(serviceAccount as any),
-  });
-} else {
-  app = getApps()[0];
-}
+import { adminDb, adminMessaging } from "@/lib/firebase-admin";
 
 export async function GET(request: NextRequest) {
   const secret = request.nextUrl.searchParams.get("secret");
@@ -23,11 +9,10 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Get all FCM tokens
-    const tokensSnap = await getDocs(collection(db, "fcmTokens"));
+    const tokensSnap = await adminDb.collection("fcmTokens").get();
     const tokens: string[] = [];
 
-    tokensSnap.forEach((doc) => {
+    tokensSnap.forEach((doc: any) => {
       const data = doc.data();
       if (data.token) tokens.push(data.token);
     });
@@ -40,14 +25,12 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const messaging = getMessaging(app);
-
-    const response = await messaging.sendEachForMulticast({
+    const response = await (adminMessaging as any).sendEachForMulticast({
       notification: {
         title: "Good morning from Eqonomy!",
         body: "New opportunities are waiting for you in Delhi-NCR. Open the app and check them out.",
       },
-      tokens: tokens,
+      tokens,
     });
 
     return NextResponse.json({
