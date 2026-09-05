@@ -159,28 +159,36 @@ export default function DashboardPage() {
     <>
       <main className={`${styles.page} page-with-bottom-nav`}>
         {/* Header */}
-        <header className={styles.header}>
-          <div className={styles.headerInner}>
-            <div className={styles.logoArea}>
-              <span className={styles.logoMark}>✦</span>
-              <span className={styles.logoText}>EQONOMY</span>
-            </div>
+<header className={styles.header}>
+  <div className={styles.headerInner}>
+    <div className={styles.logoArea}>
+      <span className={styles.logoMark}>✦</span>
+      <span className={styles.logoText}>EQONOMY</span>
+    </div>
 
-            <div className={styles.searchWrap}>
-              <input
-                type="text"
-                placeholder="Search opportunities..."
-                className={styles.searchInput}
-              />
-            </div>
+    <div className={styles.searchWrap}>
+      <input
+        type="text"
+        placeholder="Search opportunities..."
+        className={styles.searchInput}
+      />
+    </div>
 
-            <div className={styles.headerRight}>
-              <Link href="/dashboard/profile" className={styles.avatar}>
-                {profile?.displayName?.charAt(0).toUpperCase() || "U"}
-              </Link>
-            </div>
-          </div>
-        </header>
+    {/* Desktop Navigation Links */}
+    <nav className={styles.desktopNav}>
+      <Link href="/dashboard">Feed</Link>
+      <Link href="/dashboard/wallet">Wallet</Link>
+      <Link href="/dashboard/create">Post</Link>
+      <Link href="/dashboard/profile">Profile</Link>
+    </nav>
+
+    <div className={styles.headerRight}>
+      <Link href="/dashboard/profile" className={styles.avatar}>
+        {profile?.displayName?.charAt(0).toUpperCase() || "U"}
+      </Link>
+    </div>
+  </div>
+</header>
 
         <div className={styles.content}>
           {/* Welcome */}
