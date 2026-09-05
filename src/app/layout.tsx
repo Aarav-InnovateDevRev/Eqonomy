@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import FounderFab from "@/components/layout/FounderFab";
 import "@/styles/globals.scss";
 
 const inter = Inter({
@@ -11,7 +12,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Eqonomy — Want to do It?",
   description:
-    "Airbnb-inspired opportunity marketplace. Delhi-first. Hosts-first. Real opportunities from local businesses, startups, NGOs and professionals.",
+    "Airbnb-inspired opportunity marketplace. Delhi-first. Hosts-first.",
 };
 
 export default function RootLayout({
@@ -23,6 +24,7 @@ export default function RootLayout({
     <html lang="en" className={inter.variable}>
       <body>
         {children}
+        <FounderFab />
       </body>
     </html>
   );
