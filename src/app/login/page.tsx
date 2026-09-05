@@ -121,7 +121,7 @@ export default function LoginPage() {
       <section className={styles.visual}>
         <div className={styles.visualInner}>
           <div className={styles.logoRow}>
-            <span className={styles.logoMark}>✦</span>
+            <img src="/logo.png" alt="Eqonomy" className={styles.logoImg} />
             <span className={styles.logoText}>EQONOMY</span>
           </div>
 

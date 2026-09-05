@@ -162,7 +162,7 @@ export default function DashboardPage() {
 <header className={styles.header}>
   <div className={styles.headerInner}>
     <div className={styles.logoArea}>
-      <span className={styles.logoMark}>✦</span>
+      <img src="/logo.png" alt="Eqonomy" className={styles.logoImg} />
       <span className={styles.logoText}>EQONOMY</span>
     </div>
 

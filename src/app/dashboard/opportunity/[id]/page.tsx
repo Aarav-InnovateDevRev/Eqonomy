@@ -12,8 +12,10 @@ import {
   query,
   where,
   getDocs,
+  updateDoc,
   serverTimestamp,
   Timestamp,
+  increment,
 } from "firebase/firestore";
 import BottomNav from "@/components/layout/BottomNav";
 import { subscribeToAuth, ensureUserProfile } from "@/lib/auth";
@@ -52,7 +54,6 @@ export default function OpportunityDetailPage() {
     return () => unsubscribe();
   }, [router]);
 
-  // Load opportunity + check if already applied
   useEffect(() => {
     if (!id || !user) return;
 
@@ -89,7 +90,6 @@ export default function OpportunityDetailPage() {
           applicationCount: data.applicationCount || 0,
         });
 
-        // Check if current user already applied
         const q = query(
           collection(db, "applications"),
           where("opportunityId", "==", id),
@@ -107,25 +107,94 @@ export default function OpportunityDetailPage() {
     load();
   }, [id, user]);
 
+  // Extract numeric amount from compensation string (e.g. "₹3000" or "3000")
+  const getAmount = (comp?: string): number => {
+    if (!comp) return 0;
+    const num = parseInt(comp.replace(/[^0-9]/g, ""), 10);
+    return isNaN(num) ? 0 : num;
+  };
+
   const handleApply = async () => {
     if (!user || !profile || !opportunity) return;
+
+    const amount = getAmount(opportunity.compensation);
+    const isPaid = amount > 0;
 
     setApplying(true);
     setMessage("");
 
     try {
+      // If paid opportunity → check wallet and deduct
+      if (isPaid) {
+        const currentBalance = profile.walletBalance || 0;
+
+        if (currentBalance < amount) {
+          setMessage(
+            `Insufficient balance. You need ₹${amount} but have ₹${currentBalance}. Please add money to your wallet.`
+          );
+          setApplying(false);
+          return;
+        }
+
+        const platformFee = Math.round(amount * 0.1); // 10%
+        const providerAmount = amount - platformFee;
+
+        // Deduct full amount from seeker
+        await updateDoc(doc(db, "users", user.uid), {
+          walletBalance: increment(-amount),
+          updatedAt: Date.now(),
+        });
+
+        // Record transactions
+        await addDoc(collection(db, "transactions"), {
+          userId: user.uid,
+          type: "debit",
+          amount: amount,
+          description: `Applied to: ${opportunity.title}`,
+          opportunityId: opportunity.id,
+          createdAt: serverTimestamp(),
+        });
+
+        await addDoc(collection(db, "transactions"), {
+          userId: "platform",
+          type: "fee",
+          amount: platformFee,
+          description: `10% platform fee from: ${opportunity.title}`,
+          opportunityId: opportunity.id,
+          createdAt: serverTimestamp(),
+        });
+
+        // Update local profile balance
+        setProfile({
+          ...profile,
+          walletBalance: currentBalance - amount,
+        });
+      }
+
+      // Create application
       await addDoc(collection(db, "applications"), {
         opportunityId: opportunity.id,
         seekerId: user.uid,
         seekerName: profile.displayName || "Anonymous",
         status: "pending",
         coverMessage: coverMessage.trim() || "",
+        amountPaid: isPaid ? amount : 0,
+        platformFee: isPaid ? Math.round(amount * 0.1) : 0,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
 
+      // Increase application count
+      await updateDoc(doc(db, "opportunities", opportunity.id), {
+        applicationCount: increment(1),
+      });
+
       setHasApplied(true);
-      setMessage("Application submitted successfully!");
+      setMessage(
+        isPaid
+          ? `Application submitted! ₹${amount} deducted (10% platform fee applied).`
+          : "Application submitted successfully!"
+      );
     } catch (err) {
       console.error(err);
       setMessage("Failed to apply. Please try again.");
@@ -167,6 +236,9 @@ export default function OpportunityDetailPage() {
       </div>
     );
   }
+
+  const amount = getAmount(opportunity.compensation);
+  const isPaid = amount > 0;
 
   return (
     <>
@@ -237,7 +309,26 @@ export default function OpportunityDetailPage() {
               </div>
             ) : (
               <>
-                <h3 className={styles.sectionTitle}>Apply for this opportunity</h3>
+                <h3 className={styles.sectionTitle}>
+                  Apply for this opportunity
+                </h3>
+
+                {isPaid && (
+                  <div className={styles.paymentInfo}>
+                    <p>
+                      This is a <strong>paid</strong> opportunity (₹{amount}).
+                    </p>
+                    <p>
+                      ₹{amount} will be deducted from your wallet.
+                      <br />
+                      <span>Eqonomy fee (10%): ₹{Math.round(amount * 0.1)}</span>
+                    </p>
+                    <p className={styles.walletBal}>
+                      Your wallet balance: ₹{profile?.walletBalance || 0}
+                    </p>
+                  </div>
+                )}
+
                 <label className={styles.label}>
                   Short message (optional)
                 </label>
@@ -252,7 +343,7 @@ export default function OpportunityDetailPage() {
                 {message && (
                   <p
                     className={
-                      message.includes("success")
+                      message.includes("success") || message.includes("submitted")
                         ? styles.successMsg
                         : styles.errorMsg
                     }
@@ -266,7 +357,11 @@ export default function OpportunityDetailPage() {
                   className={styles.applyBtn}
                   disabled={applying}
                 >
-                  {applying ? "Submitting…" : "Submit Application"}
+                  {applying
+                    ? "Submitting…"
+                    : isPaid
+                    ? `Pay ₹${amount} & Apply`
+                    : "Submit Application"}
                 </button>
               </>
             )}

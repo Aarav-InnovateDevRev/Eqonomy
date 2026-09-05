@@ -262,3 +262,10 @@
   color: var(--color-danger);
   font-size: 0.875rem;
 }
+
+.logoImg {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  border-radius: 6px;
+}

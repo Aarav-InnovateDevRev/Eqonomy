@@ -381,3 +381,10 @@
     display: flex;
   }
 }
+
+.logoImg {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  border-radius: 6px;
+}
