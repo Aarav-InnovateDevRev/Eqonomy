@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const response = await (adminMessaging as any).sendEachForMulticast({
+    const response = await (adminMessaging as any).sendMulticast({
       notification: {
         title: "Good morning from Eqonomy!",
         body: "New opportunities are waiting for you in Delhi-NCR. Open the app and check them out.",
