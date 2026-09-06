@@ -6,6 +6,7 @@ import Link from "next/link";
 import {
   isSignInWithEmailLink,
   signInWithEmailLink,
+  sendSignInLinkToEmail,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import styles from "./login.module.scss";
@@ -16,9 +17,9 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const [step, setStep] = useState<"intro" | "email" | "success">("intro");
+  const [showMagicLink, setShowMagicLink] = useState(false);
 
-  // Handle Magic Link completion (for existing users)
+  // Handle Magic Link completion
   useEffect(() => {
     const completeSignIn = async () => {
       if (isSignInWithEmailLink(auth, window.location.href)) {
@@ -38,7 +39,7 @@ export default function LoginPage() {
           } catch (err: any) {
             console.error(err);
             if (err.code === "auth/invalid-action-code") {
-              setError("This magic link is invalid or has already been used. Please request a new one.");
+              setError("This magic link is invalid or has already been used.");
             } else {
               setError("Failed to sign in. Please try again.");
             }
@@ -53,138 +54,141 @@ export default function LoginPage() {
     completeSignIn();
   }, [router]);
 
+  const handleSendMagicLink = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    setMessage("");
+
+    try {
+      const actionCodeSettings = {
+        url: window.location.origin + "/login",
+        handleCodeInApp: true,
+      };
+
+      await sendSignInLinkToEmail(auth, email, actionCodeSettings);
+      window.localStorage.setItem("emailForSignIn", email);
+      setMessage("Magic link sent! Check your email (and spam folder).");
+    } catch (err) {
+      console.error(err);
+      setError("Failed to send magic link. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className={styles.page}>
-      <div className={styles.card}>
-        <div className={styles.logoRow}>
-          <img src="/logo.png" alt="Eqonomy" className={styles.logoImg} />
-          <span className={styles.logoText}>EQONOMY</span>
-        </div>
-
-        {step === "intro" && (
-          <>
-            <h1 className={styles.title}>Welcome to Eqonomy</h1>
-            <p className={styles.subtitle}>
-              Delhi-NCR’s opportunity marketplace. Verify your identity and start building.
-            </p>
-
-            <div className={styles.features}>
-              <div className={styles.feature}>
-                <span>🛡️</span>
-                <p>Government-style verification</p>
-              </div>
-              <div className={styles.feature}>
-                <span>💼</span>
-                <p>Real projects & guidance</p>
-              </div>
-              <div className={styles.feature}>
-                <span>🔒</span>
-                <p>Trusted profiles</p>
-              </div>
+      <div className={styles.container}>
+        {/* Left Visual Side */}
+        <div className={styles.visualSide}>
+          <div className={styles.visualContent}>
+            <div className={styles.logoRow}>
+              <img src="/logo.png" alt="Eqonomy" className={styles.logoImg} />
+              <span className={styles.logoText}>EQONOMY</span>
             </div>
 
-            <button
-              type="button"
-              className={styles.primaryBtn}
-              onClick={() => router.push("/register")}
-            >
-              Let’s Begin →
-            </button>
+            <h1 className={styles.visualTitle}>
+              Come as you are.<br />
+              Let’s build your future, together.
+            </h1>
 
-            <p className={styles.footer}>
-              Already have an account?{" "}
-              <button
-                type="button"
-                className={styles.linkBtn}
-                onClick={() => setStep("email")}
-              >
-                Login with Magic Link
-              </button>
-            </p>
-          </>
-        )}
-
-        {step === "email" && (
-          <>
-            <h1 className={styles.title}>Login with Magic Link</h1>
-            <p className={styles.subtitle}>
-              Enter your email and we’ll send you a secure login link.
+            <p className={styles.visualSubtitle}>
+              Delhi-NCR’s trusted opportunity marketplace for students, freelancers and local businesses.
             </p>
 
-            <form
-              onSubmit={async (e) => {
-                e.preventDefault();
-                setLoading(true);
-                setError("");
-                setMessage("");
-
-                try {
-                  const actionCodeSettings = {
-                    url: window.location.origin + "/login",
-                    handleCodeInApp: true,
-                  };
-
-                  const { sendSignInLinkToEmail } = await import("firebase/auth");
-                  await sendSignInLinkToEmail(auth, email, actionCodeSettings);
-                  window.localStorage.setItem("emailForSignIn", email);
-                  setMessage("Magic link sent! Check your email (and spam folder).");
-                  setStep("success");
-                } catch (err: any) {
-                  console.error(err);
-                  setError("Failed to send magic link. Please try again.");
-                } finally {
-                  setLoading(false);
-                }
-              }}
-              className={styles.form}
-            >
-              <label className={styles.label}>Email</label>
-              <input
-                type="email"
-                className={styles.input}
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="your@email.com"
-                required
-              />
-
-              {error && <p className={styles.error}>{error}</p>}
-              {message && <p className={styles.success}>{message}</p>}
-
-              <button
-                type="submit"
-                className={styles.primaryBtn}
-                disabled={loading}
-              >
-                {loading ? "Sending…" : "Send Magic Link"}
-              </button>
-            </form>
-
-            <button
-              type="button"
-              className={styles.backBtn}
-              onClick={() => setStep("intro")}
-            >
-              ← Back
-            </button>
-          </>
-        )}
-
-        {step === "success" && (
-          <div className={styles.successBox}>
-            <div className={styles.successIcon}>✓</div>
-            <h2>Check your email</h2>
-            <p>We sent a magic link to <strong>{email}</strong></p>
-            <p className={styles.note}>Also check your spam folder.</p>
-            <button
-              type="button"
-              className={styles.primaryBtn}
-              onClick={() => setStep("intro")}
-            >
-              Back to Home
-            </button>
+            <div className={styles.pillars}>
+              <div className={styles.pillar}>
+                <span>🛡️</span>
+                <p>Verified Profiles</p>
+              </div>
+              <div className={styles.pillar}>
+                <span>💼</span>
+                <p>Real Opportunities</p>
+              </div>
+              <div className={styles.pillar}>
+                <span>🤝</span>
+                <p>Trusted Network</p>
+              </div>
+            </div>
           </div>
-        )}
+        </div>
+
+        {/* Right Form Side */}
+        <div className={styles.formSide}>
+          <div className={styles.formCard}>
+            {!showMagicLink ? (
+              <>
+                <h2 className={styles.formTitle}>Get Started</h2>
+                <p className={styles.formSubtitle}>
+                  Verify your identity and join Eqonomy in minutes.
+                </p>
+
+                <button
+                  type="button"
+                  className={styles.primaryBtn}
+                  onClick={() => router.push("/register")}
+                >
+                  Let’s Begin →
+                </button>
+
+                <div className={styles.divider}>
+                  <span>or</span>
+                </div>
+
+                <button
+                  type="button"
+                  className={styles.secondaryBtn}
+                  onClick={() => setShowMagicLink(true)}
+                >
+                  Login with Magic Link
+                </button>
+              </>
+            ) : (
+              <>
+                <h2 className={styles.formTitle}>Magic Link Login</h2>
+                <p className={styles.formSubtitle}>
+                  Enter your email and we’ll send you a secure login link.
+                </p>
+
+                <form onSubmit={handleSendMagicLink} className={styles.form}>
+                  <label className={styles.label}>Email address</label>
+                  <input
+                    type="email"
+                    className={styles.input}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="your@email.com"
+                    required
+                  />
+
+                  {error && <p className={styles.error}>{error}</p>}
+                  {message && <p className={styles.success}>{message}</p>}
+
+                  <button
+                    type="submit"
+                    className={styles.primaryBtn}
+                    disabled={loading}
+                  >
+                    {loading ? "Sending…" : "Send Magic Link"}
+                  </button>
+                </form>
+
+                <button
+                  type="button"
+                  className={styles.backLink}
+                  onClick={() => {
+                    setShowMagicLink(false);
+                    setError("");
+                    setMessage("");
+                  }}
+                >
+                  ← Back
+                </button>
+              </>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
