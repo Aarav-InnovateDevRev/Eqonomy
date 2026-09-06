@@ -23,7 +23,7 @@ import { db } from "@/lib/firebase";
 import { UserProfile, Opportunity } from "@/types";
 import styles from "./opportunity.module.scss";
 
-export default async function OpportunityDetailPage() {
+export default function OpportunityDetailPage() {
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
@@ -107,60 +107,51 @@ export default async function OpportunityDetailPage() {
     load();
   }, [id, user]);
 
-  // Extract numeric amount from compensation string (e.g. "₹3000" or "3000")
-  const getAmount = (comp?: string): number => {
-    if (!comp) return 0;
-    const num = parseInt(comp.replace(/[^0-9]/g, ""), 10);
-    return isNaN(num) ? 0 : num;
-  };
-
   const handleApply = async () => {
-  if (!user || !profile || !opportunity) return;
+    if (!user || !profile || !opportunity) return;
 
-  setApplying(true);
-  setMessage("");
+    setApplying(true);
+    setMessage("");
 
-  try {
-    // Create application (NO payment at this stage)
-    await addDoc(collection(db, "applications"), {
-      opportunityId: opportunity.id,
-      seekerId: user.uid,
-      seekerName: profile.displayName || "Anonymous",
-      status: "pending",
-      coverMessage: coverMessage.trim() || "",
-      amountPaid: 0,
-      platformFee: 0,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    });
+    try {
+      // Create application (NO payment at this stage)
+      await addDoc(collection(db, "applications"), {
+        opportunityId: opportunity.id,
+        seekerId: user.uid,
+        seekerName: profile.displayName || "Anonymous",
+        status: "pending",
+        coverMessage: coverMessage.trim() || "",
+        amountPaid: 0,
+        platformFee: 0,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
 
-    // Increase application count
-    await updateDoc(doc(db, "opportunities", opportunity.id), {
-      applicationCount: increment(1),
-    });
+      // Increase application count
+      await updateDoc(doc(db, "opportunities", opportunity.id), {
+        applicationCount: increment(1),
+      });
 
-    setHasApplied(true);
-    setMessage("Application submitted successfully! The host will be notified.");
-  } catch (err) {
-    console.error(err);
-    setMessage("Failed to apply. Please try again.");
-  } finally {
-    setApplying(false);
-  }
-};
- 
-// Create in-app notification for the provider (Host)
-if (opportunity) {
-  await addDoc(collection(db, "notifications"), {
-    userId: opportunity.providerId,
-    title: "New Application Received",
-    body: `${profile?.displayName || "Someone"} applied to your opportunity: ${opportunity.title}`,
-    type: "application",
-    read: false,
-    link: `/dashboard/opportunity/${opportunity.id}`,
-    createdAt: serverTimestamp(),
-  });
-}
+      // Create in-app notification for the Host
+      await addDoc(collection(db, "notifications"), {
+        userId: opportunity.providerId,
+        title: "New Application Received",
+        body: `${profile.displayName || "Someone"} applied to your opportunity: ${opportunity.title}`,
+        type: "application",
+        read: false,
+        link: `/dashboard/opportunity/${opportunity.id}`,
+        createdAt: serverTimestamp(),
+      });
+
+      setHasApplied(true);
+      setMessage("Application submitted successfully! The host will be notified.");
+    } catch (err) {
+      console.error(err);
+      setMessage("Failed to apply. Please try again.");
+    } finally {
+      setApplying(false);
+    }
+  };
 
   const formatType = (type: string) => {
     const map: Record<string, string> = {
@@ -195,9 +186,6 @@ if (opportunity) {
       </div>
     );
   }
-
-  const amount = getAmount(opportunity.compensation);
-  const isPaid = amount > 0;
 
   return (
     <>
@@ -272,22 +260,6 @@ if (opportunity) {
                   Apply for this opportunity
                 </h3>
 
-                {isPaid && (
-                  <div className={styles.paymentInfo}>
-                    <p>
-                      This is a <strong>paid</strong> opportunity (₹{amount}).
-                    </p>
-                    <p>
-                      ₹{amount} will be credited to your wallet.
-                      <br />
-                      <span>Eqonomy fee (10%): ₹{Math.round(amount * 0.1)}</span>
-                    </p>
-                    <p className={styles.walletBal}>
-                      Your wallet balance: ₹{profile?.walletBalance || 0}
-                    </p>
-                  </div>
-                )}
-
                 <label className={styles.label}>
                   Short message (optional)
                 </label>
@@ -315,9 +287,9 @@ if (opportunity) {
                   onClick={handleApply}
                   className={styles.applyBtn}
                   disabled={applying}
-               >
+                >
                   {applying ? "Submitting…" : "Submit Application"}
-               </button>
+                </button>
               </>
             )}
           </section>
