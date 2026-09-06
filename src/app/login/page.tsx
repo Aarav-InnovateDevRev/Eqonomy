@@ -195,10 +195,11 @@ export default function LoginPage() {
               </p>
 
               <button
+                type="button"
                 className={styles.primaryBtn}
-                onClick={() => setStep("email")}
-              >
-                Let’s Begin →
+                onClick={() => router.push("/register")}
+                >
+                  Let’s Begin →
               </button>
 
               <p className={styles.privacy}>
