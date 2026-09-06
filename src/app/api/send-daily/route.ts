@@ -25,13 +25,26 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const response = await (adminMessaging as any).sendMulticast({
+let successCount = 0;
+let failureCount = 0;
+
+for (const token of tokens) {
+  try {
+    await adminMessaging.send({
+      token,
       notification: {
         title: "Good morning from Eqonomy!",
         body: "New opportunities are waiting for you in Delhi-NCR. Open the app and check them out.",
       },
-      tokens,
     });
+    successCount++;
+  } catch (err) {
+    console.error("Failed to send to token:", token, err);
+    failureCount++;
+  }
+}
+
+const response = { successCount, failureCount };
 
     return NextResponse.json({
       success: true,
