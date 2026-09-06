@@ -148,7 +148,7 @@ export default async function OpportunityDetailPage() {
     setApplying(false);
   }
 };
-
+ 
 // Create in-app notification for the provider (Host)
 if (opportunity) {
   await addDoc(collection(db, "notifications"), {
