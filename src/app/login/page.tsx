@@ -245,6 +245,10 @@ export default function LoginPage() {
               >
                 {loading ? "Sending…" : "Send Magic Link"}
               </button>
+
+              <p className={styles.footer}>
+                Already verified? <Link href="/login">Login with Magic Link</Link>
+              </p>
             </form>
           )}
 
