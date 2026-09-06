@@ -23,7 +23,7 @@ import { db } from "@/lib/firebase";
 import { UserProfile, Opportunity } from "@/types";
 import styles from "./opportunity.module.scss";
 
-export default function OpportunityDetailPage() {
+export default async function OpportunityDetailPage() {
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
@@ -148,6 +148,19 @@ export default function OpportunityDetailPage() {
     setApplying(false);
   }
 };
+
+// Create in-app notification for the provider (Host)
+if (opportunity) {
+  await addDoc(collection(db, "notifications"), {
+    userId: opportunity.providerId,
+    title: "New Application Received",
+    body: `${profile?.displayName || "Someone"} applied to your opportunity: ${opportunity.title}`,
+    type: "application",
+    read: false,
+    link: `/dashboard/opportunity/${opportunity.id}`,
+    createdAt: serverTimestamp(),
+  });
+}
 
   const formatType = (type: string) => {
     const map: Record<string, string> = {
