@@ -64,6 +64,14 @@ export interface UserProfile {
   completedOpportunitiesCount: number;
   reputationScore: number;
   walletBalance?: number;
+  // Government Verification
+  name?: string;                    // immutable after verification
+  phone?: string;                   // immutable
+  dateOfBirth?: string;             // YYYY-MM-DD
+  age?: number;                     // calculated
+  isGovtVerified: boolean;
+  parentPhone?: string;
+ parentVerified: boolean;
 }
 
 export interface Opportunity {

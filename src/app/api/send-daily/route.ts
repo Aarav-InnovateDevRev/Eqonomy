@@ -31,12 +31,15 @@ let failureCount = 0;
 for (const token of tokens) {
   try {
     await adminMessaging.send({
-      token,
-      notification: {
-        title: "Good morning from Eqonomy!",
-        body: "New opportunities are waiting for you in Delhi-NCR. Open the app and check them out.",
-      },
-    });
+  token,
+  notification: {
+    title: "Eqonomy Daily · Delhi-NCR",
+    body: "Fresh opportunities are live. Open Eqonomy and find your next project, guidance session or challenge.",
+  },
+  data: {
+    url: "/dashboard",
+  },
+});
     successCount++;
   } catch (err) {
     console.error("Failed to send to token:", token, err);
