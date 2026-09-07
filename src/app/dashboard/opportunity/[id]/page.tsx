@@ -35,6 +35,7 @@ export default function OpportunityDetailPage() {
   const [applying, setApplying] = useState(false);
   const [hasApplied, setHasApplied] = useState(false);
   const [message, setMessage] = useState("");
+  const [applicantPhone, setApplicantPhone] = useState("");
   const [coverMessage, setCoverMessage] = useState("");
 
   useEffect(() => {
@@ -114,7 +115,7 @@ export default function OpportunityDetailPage() {
     setMessage("");
 
     try {
-      // Create application (NO payment at this stage)
+      // Create application 
       await addDoc(collection(db, "applications"), {
         opportunityId: opportunity.id,
         seekerId: user.uid,
@@ -260,6 +261,15 @@ export default function OpportunityDetailPage() {
                   Apply for this opportunity
                 </h3>
 
+                <label className={styles.label}>Your Phone Number (+91)</label>
+                <input
+                 type="tel"
+                 className={styles.input}
+                 value={applicantPhone}
+                 onChange={(e) => setApplicantPhone(e.target.value)}
+                 placeholder="10-digit number"
+                 required
+                />
                 <label className={styles.label}>
                   Short message (optional)
                 </label>
