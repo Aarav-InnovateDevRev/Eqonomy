@@ -279,11 +279,6 @@ export default function DashboardPage() {
 
           {/* ===================== FEED ===================== */}
 <section className={styles.feedSection}>
-  <div className={styles.feedHeader}>
-    <h2>Opportunities</h2>
-    <p>{opportunities.length} live</p>
-  </div>
-
   {opportunities.length === 0 ? (
     <div className={styles.emptyState}>
       <h3>No opportunities yet</h3>
@@ -309,33 +304,50 @@ export default function DashboardPage() {
           <Link
             href={`/dashboard/opportunity/${opp.id}`}
             key={opp.id}
-            className={styles.card}
+            className={styles.opportunityCard}
           >
-            <div className={styles.cardTop}>
-              <span className={styles.typeBadge}>
-                {opp.type?.replace("_", " ") || "Opportunity"}
+            <div className={styles.cardHeader}>
+              <span className={styles.typePill}>
+                {opp.type?.replace(/_/g, " ") || "Opportunity"}
               </span>
-              <span className={styles.location}>
+              <span className={styles.locationText}>
                 {opp.isRemote ? "Remote" : opp.location || "Delhi-NCR"}
               </span>
             </div>
 
             <h3 className={styles.cardTitle}>{opp.title}</h3>
-            <p className={styles.cardProvider}>by {opp.providerName}</p>
+            
+            <p className={styles.providerName}>Posted by {opp.providerName}</p>
 
-            <p className={styles.cardDesc}>
-              {opp.description?.length > 120
-                ? opp.description.slice(0, 120) + "..."
+            <p className={styles.cardDescription}>
+              {opp.description?.length > 140
+                ? opp.description.substring(0, 140) + "..."
                 : opp.description}
             </p>
 
-            <div className={styles.cardFooter}>
-              <span className={styles.compensation}>
-                {opp.compensation || "Not specified"}
-              </span>
-              <span className={styles.apps}>
-                {opp.applicationCount || 0} applied
-              </span>
+            {opp.skillsRequired?.length > 0 && (
+              <div className={styles.skillsRow}>
+                {opp.skillsRequired.slice(0, 3).map((skill: string) => (
+                  <span key={skill} className={styles.skillTag}>
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            <div className={styles.cardMeta}>
+              <div className={styles.metaItem}>
+                <span className={styles.metaLabel}>Compensation</span>
+                <span className={styles.metaValue}>
+                  {opp.compensation || "Not specified"}
+                </span>
+              </div>
+              <div className={styles.metaItem}>
+                <span className={styles.metaLabel}>Applications</span>
+                <span className={styles.metaValue}>
+                  {opp.applicationCount || 0}
+                </span>
+              </div>
             </div>
           </Link>
         ))}
