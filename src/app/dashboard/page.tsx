@@ -24,6 +24,7 @@ export default function DashboardPage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
 
   // Auth + Profile
@@ -171,8 +172,10 @@ export default function DashboardPage() {
 
     <div className={styles.searchWrap}>
       <input
-        type="text"
-        placeholder="Search opportunities..."
+       type="text"
+       placeholder="Search opportunities..."
+       value={searchQuery}
+       onChange={(e) => setSearchQuery(e.target.value)}
         className={styles.searchInput}
       />
     </div>
@@ -274,66 +277,71 @@ export default function DashboardPage() {
             </div>
           </section>
 
-          {/* Feed */}
-          <section className={styles.feedSection}>
-            <div className={styles.sectionHeader}>
-              <h2>Opportunities in Delhi-NCR</h2>
-              <Link href="/dashboard/create" className={styles.postBtn}>
-                + Post Opportunity
-              </Link>
+          {/* ===================== FEED ===================== */}
+<section className={styles.feedSection}>
+  <div className={styles.feedHeader}>
+    <h2>Opportunities</h2>
+    <p>{opportunities.length} live</p>
+  </div>
+
+  {opportunities.length === 0 ? (
+    <div className={styles.emptyState}>
+      <h3>No opportunities yet</h3>
+      <p>Be the first to post one.</p>
+    </div>
+  ) : (
+    <div className={styles.feedList}>
+      {opportunities
+        .filter((opp) => {
+          if (!searchQuery.trim()) return true;
+
+          const q = searchQuery.toLowerCase();
+          return (
+            opp.title?.toLowerCase().includes(q) ||
+            opp.description?.toLowerCase().includes(q) ||
+            opp.providerName?.toLowerCase().includes(q) ||
+            (opp.skillsRequired || []).some((skill: string) =>
+              skill.toLowerCase().includes(q)
+            )
+          );
+        })
+        .map((opp) => (
+          <Link
+            href={`/dashboard/opportunity/${opp.id}`}
+            key={opp.id}
+            className={styles.card}
+          >
+            <div className={styles.cardTop}>
+              <span className={styles.typeBadge}>
+                {opp.type?.replace("_", " ") || "Opportunity"}
+              </span>
+              <span className={styles.location}>
+                {opp.isRemote ? "Remote" : opp.location || "Delhi-NCR"}
+              </span>
             </div>
 
-            {filteredOpportunities.length === 0 ? (
-              <div className={styles.emptyState}>
-                <h3>No opportunities yet</h3>
-                <p>
-                  Be the first to post one. Real opportunities from local
-                  businesses and professionals will appear here.
-                </p>
-                <Link href="/dashboard/create" className={styles.postBtn}>
-                  + Post the first opportunity
-                </Link>
-              </div>
-            ) : (
-              <div className={styles.feed}>
-                {filteredOpportunities.map((opp) => (
-                  <article key={opp.id} className={styles.card}>
-                    <div className={styles.cardTop}>
-                      <span className={styles.typeBadge}>
-                        {formatType(opp.type)}
-                      </span>
-                      <span className={styles.location}>
-                        {opp.isRemote ? "Remote" : opp.location}
-                      </span>
-                    </div>
+            <h3 className={styles.cardTitle}>{opp.title}</h3>
+            <p className={styles.cardProvider}>by {opp.providerName}</p>
 
-                    <h3 className={styles.cardTitle}>{opp.title}</h3>
-                    <p className={styles.provider}>{opp.providerName}</p>
+            <p className={styles.cardDesc}>
+              {opp.description?.length > 120
+                ? opp.description.slice(0, 120) + "..."
+                : opp.description}
+            </p>
 
-                    <div className={styles.skills}>
-                      {opp.skillsRequired?.slice(0, 4).map((skill) => (
-                        <span key={skill} className={styles.skillPill}>
-                          {skill}
-                        </span>
-                      ))}
-                    </div>
-
-                    <div className={styles.cardFooter}>
-                      <span className={styles.compensation}>
-                        {opp.compensation || "Not specified"}
-                      </span>
-                      <Link
-                          href={`/dashboard/opportunity/${opp.id}`}
-                          className={styles.applyBtn}
-                            >
-                           View & Apply
-                     </Link>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            )}
-          </section>
+            <div className={styles.cardFooter}>
+              <span className={styles.compensation}>
+                {opp.compensation || "Not specified"}
+              </span>
+              <span className={styles.apps}>
+                {opp.applicationCount || 0} applied
+              </span>
+            </div>
+          </Link>
+        ))}
+    </div>
+  )}
+</section>
         </div>
       </main>
 
