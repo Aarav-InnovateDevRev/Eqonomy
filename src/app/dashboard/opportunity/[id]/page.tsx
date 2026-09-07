@@ -144,6 +144,19 @@ export default function OpportunityDetailPage() {
         createdAt: serverTimestamp(),
       });
 
+      await addDoc(collection(db, "applications"), {
+        opportunityId: opportunity.id,
+        seekerId: user.uid,
+       seekerName: profile.displayName || "Anonymous",
+       seekerPhone: applicantPhone ? `+91${applicantPhone}` : null,
+       status: "pending",
+       coverMessage: coverMessage.trim() || "",
+       amountPaid: 0,
+       platformFee: 0,
+       createdAt: serverTimestamp(),
+       updatedAt: serverTimestamp(),
+      });
+
       setHasApplied(true);
       setMessage("Application submitted successfully! The host will be notified.");
     } catch (err) {
