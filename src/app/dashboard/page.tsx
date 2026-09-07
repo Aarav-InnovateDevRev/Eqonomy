@@ -277,19 +277,42 @@ export default function DashboardPage() {
             </div>
           </section>
 
-          {/* ===================== FEED ===================== */}
+          {/* Feed */}
 <section className={styles.feedSection}>
-  {opportunities.length === 0 ? (
+  <div className={styles.sectionHeader}>
+    <h2>Opportunities in Delhi-NCR</h2>
+    <Link href="/dashboard/create" className={styles.postBtn}>
+      + Post Opportunity
+    </Link>
+  </div>
+
+  {opportunities.filter((opp) => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      opp.title?.toLowerCase().includes(q) ||
+      opp.description?.toLowerCase().includes(q) ||
+      opp.providerName?.toLowerCase().includes(q) ||
+      (opp.skillsRequired || []).some((skill: string) =>
+        skill.toLowerCase().includes(q)
+      )
+    );
+  }).length === 0 ? (
     <div className={styles.emptyState}>
       <h3>No opportunities yet</h3>
-      <p>Be the first to post one.</p>
+      <p>
+        Be the first to post one. Real opportunities from local
+        businesses and professionals will appear here.
+      </p>
+      <Link href="/dashboard/create" className={styles.postBtn}>
+        + Post the first opportunity
+      </Link>
     </div>
   ) : (
-    <div className={styles.feedList}>
+    <div className={styles.feed}>
       {opportunities
         .filter((opp) => {
           if (!searchQuery.trim()) return true;
-
           const q = searchQuery.toLowerCase();
           return (
             opp.title?.toLowerCase().includes(q) ||
@@ -301,55 +324,39 @@ export default function DashboardPage() {
           );
         })
         .map((opp) => (
-          <Link
-            href={`/dashboard/opportunity/${opp.id}`}
-            key={opp.id}
-            className={styles.opportunityCard}
-          >
-            <div className={styles.cardHeader}>
-              <span className={styles.typePill}>
-                {opp.type?.replace(/_/g, " ") || "Opportunity"}
+          <article key={opp.id} className={styles.card}>
+            <div className={styles.cardTop}>
+              <span className={styles.typeBadge}>
+                {formatType(opp.type)}
               </span>
-              <span className={styles.locationText}>
-                {opp.isRemote ? "Remote" : opp.location || "Delhi-NCR"}
+              <span className={styles.location}>
+                {opp.isRemote ? "Remote" : opp.location}
               </span>
             </div>
 
             <h3 className={styles.cardTitle}>{opp.title}</h3>
-            
-            <p className={styles.providerName}>Posted by {opp.providerName}</p>
+            <p className={styles.provider}>{opp.providerName}</p>
 
-            <p className={styles.cardDescription}>
-              {opp.description?.length > 140
-                ? opp.description.substring(0, 140) + "..."
-                : opp.description}
-            </p>
-
-            {opp.skillsRequired?.length > 0 && (
-              <div className={styles.skillsRow}>
-                {opp.skillsRequired.slice(0, 3).map((skill: string) => (
-                  <span key={skill} className={styles.skillTag}>
-                    {skill}
-                  </span>
-                ))}
-              </div>
-            )}
-
-            <div className={styles.cardMeta}>
-              <div className={styles.metaItem}>
-                <span className={styles.metaLabel}>Compensation</span>
-                <span className={styles.metaValue}>
-                  {opp.compensation || "Not specified"}
+            <div className={styles.skills}>
+              {opp.skillsRequired?.slice(0, 4).map((skill) => (
+                <span key={skill} className={styles.skillPill}>
+                  {skill}
                 </span>
-              </div>
-              <div className={styles.metaItem}>
-                <span className={styles.metaLabel}>Applications</span>
-                <span className={styles.metaValue}>
-                  {opp.applicationCount || 0}
-                </span>
-              </div>
+              ))}
             </div>
-          </Link>
+
+            <div className={styles.cardFooter}>
+              <span className={styles.compensation}>
+                {opp.compensation || "Not specified"}
+              </span>
+              <Link
+                href={`/dashboard/opportunity/${opp.id}`}
+                className={styles.applyBtn}
+              >
+                View & Apply
+              </Link>
+            </div>
+          </article>
         ))}
     </div>
   )}
