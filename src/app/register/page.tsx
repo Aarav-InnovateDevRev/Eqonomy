@@ -3,16 +3,16 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import emailjs from "@emailjs/browser";
 import {
   createUserWithEmailAndPassword,
-  sendEmailVerification,
   updateProfile,
 } from "firebase/auth";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import styles from "./register.module.scss";
 
-type Step = "details" | "parent" | "credentials" | "success";
+type Step = "details" | "otp" | "parent" | "credentials" | "success";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -25,14 +25,18 @@ export default function RegisterPage() {
   const [name, setName] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [age, setAge] = useState<number | null>(null);
-  const [phone, setPhone] = useState(""); // optional self-declared
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
 
-  // Parent (if minor)
+  // OTP
+  const [otp, setOtp] = useState("");
+  const [generatedOtp, setGeneratedOtp] = useState("");
+
+  // Parent
   const [parentEmail, setParentEmail] = useState("");
   const [parentVerified, setParentVerified] = useState(false);
 
-  // Credentials
-  const [email, setEmail] = useState("");
+  // Password
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
@@ -45,38 +49,79 @@ export default function RegisterPage() {
     return a;
   };
 
-  // Step 1: Basic details
-  const handleDetailsSubmit = (e: React.FormEvent) => {
+  // Generate 6-digit OTP
+  const generateOtp = () => {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+  };
+
+  // Step 1: Collect details + send OTP
+  const handleDetailsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
-    if (!name.trim() || !dateOfBirth) {
-      setError("Please fill Name and Date of Birth");
+    if (!name.trim() || !dateOfBirth || !email.trim()) {
+      setError("Please fill Name, Date of Birth and Email");
       return;
     }
 
     const calculatedAge = calculateAge(dateOfBirth);
     if (calculatedAge < 13) {
-      setError("You must be at least 13 years old to join Eqonomy");
+      setError("You must be at least 13 years old");
       return;
     }
 
     setAge(calculatedAge);
+    setLoading(true);
 
-    if (calculatedAge < 18) {
+    try {
+      const newOtp = generateOtp();
+      setGeneratedOtp(newOtp);
+
+      // Send OTP via EmailJS
+      await emailjs.send(
+        "service_e0b45ub",
+        "template_0kdlgsm",
+        {
+          name: name,
+          otp: newOtp,
+          email: email,
+        },
+        "dmAfk8l3ozaC8edvF"
+      );
+
+      setStep("otp");
+    } catch (err) {
+      console.error(err);
+      setError("Failed to send OTP. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Step 2: Verify OTP
+  const handleOtpSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    if (otp !== generatedOtp) {
+      setError("Invalid OTP. Please try again.");
+      return;
+    }
+
+    if ((age || 0) < 18) {
       setStep("parent");
     } else {
       setStep("credentials");
     }
   };
 
-  // Step 2: Parent email (for minors)
+  // Step 3: Parent email (minors)
   const handleParentSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
     if (!parentEmail.trim()) {
-      setError("Please enter a parent email");
+      setError("Please enter parent email");
       return;
     }
 
@@ -84,7 +129,7 @@ export default function RegisterPage() {
     setStep("credentials");
   };
 
-  // Step 3: Create account
+  // Step 4: Create account
   const handleCreateAccount = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -103,7 +148,6 @@ export default function RegisterPage() {
         return;
       }
 
-      // Create Firebase Auth user
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         email,
@@ -111,13 +155,8 @@ export default function RegisterPage() {
       );
       const user = userCredential.user;
 
-      // Update display name
       await updateProfile(user, { displayName: name });
 
-      // Send email verification
-      await sendEmailVerification(user);
-
-      // Save profile in Firestore
       await setDoc(doc(db, "users", user.uid), {
         uid: user.uid,
         email,
@@ -126,15 +165,15 @@ export default function RegisterPage() {
         dateOfBirth,
         age,
         isGovtVerified: false,
+        isEmailVerified: true,
         isPhoneVerified: false,
-        isEmailVerified: false, // will become true after user clicks the link
         isMinor: (age || 0) < 18,
         parentEmail: (age || 0) < 18 ? parentEmail : null,
         parentVerified: (age || 0) < 18 ? parentVerified : true,
         role: "seeker",
         displayName: name.trim(),
         skills: [],
-        verificationStatus: "email_pending",
+        verificationStatus: "email_verified",
         walletBalance: 0,
         completedOpportunitiesCount: 0,
         reputationScore: 50,
@@ -147,8 +186,6 @@ export default function RegisterPage() {
       console.error(err);
       if (err.code === "auth/email-already-in-use") {
         setError("This email is already registered");
-      } else if (err.code === "auth/invalid-email") {
-        setError("Invalid email address");
       } else {
         setError(err.message || "Failed to create account");
       }
@@ -170,7 +207,7 @@ export default function RegisterPage() {
           <>
             <h1 className={styles.title}>Create your Account</h1>
             <p className={styles.subtitle}>
-              Tell us a bit about yourself to get started.
+              Enter your details. We will send a 6-digit code to your email.
             </p>
 
             <form onSubmit={handleDetailsSubmit} className={styles.form}>
@@ -192,30 +229,67 @@ export default function RegisterPage() {
                 required
               />
 
-              <label className={styles.label}>Phone Number (optional)</label>
+              <label className={styles.label}>Email</label>
+              <input
+                className={styles.input}
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="your@email.com"
+                required
+              />
+
+              <label className={styles.label}>Phone (optional)</label>
               <input
                 className={styles.input}
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                placeholder="10-digit mobile number"
+                placeholder="10-digit number"
               />
 
               {error && <p className={styles.error}>{error}</p>}
 
-              <button type="submit" className={styles.primaryBtn}>
-                Continue
+              <button type="submit" className={styles.primaryBtn} disabled={loading}>
+                {loading ? "Sending OTP…" : "Send OTP"}
               </button>
             </form>
           </>
         )}
 
-        {/* STEP 2: Parent (Minors) */}
+        {/* STEP 2: OTP */}
+        {step === "otp" && (
+          <>
+            <h1 className={styles.title}>Enter OTP</h1>
+            <p className={styles.subtitle}>
+              We sent a 6-digit code to <strong>{email}</strong>
+            </p>
+
+            <form onSubmit={handleOtpSubmit} className={styles.form}>
+              <label className={styles.label}>6-digit OTP</label>
+              <input
+                className={styles.input}
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+                placeholder="Enter OTP"
+                required
+              />
+
+              {error && <p className={styles.error}>{error}</p>}
+
+              <button type="submit" className={styles.primaryBtn}>
+                Verify OTP
+              </button>
+            </form>
+          </>
+        )}
+
+        {/* STEP 3: Parent */}
         {step === "parent" && (
           <>
             <h1 className={styles.title}>Parent Email Required</h1>
             <p className={styles.subtitle}>
-              You are under 18. Please provide a parent’s email address.
+              You are under 18. Please provide a parent’s email.
             </p>
 
             <form onSubmit={handleParentSubmit} className={styles.form}>
@@ -238,40 +312,28 @@ export default function RegisterPage() {
           </>
         )}
 
-        {/* STEP 3: Credentials */}
+        {/* STEP 4: Password */}
         {step === "credentials" && (
           <>
-            <h1 className={styles.title}>Create Login Details</h1>
+            <h1 className={styles.title}>Create Password</h1>
             <p className={styles.subtitle}>
-              Set your permanent email and password.
+              Your email is verified. Now set your password.
             </p>
 
             <div className={styles.verifiedBox}>
               <p><strong>Name:</strong> {name}</p>
+              <p><strong>Email:</strong> {email} ✓</p>
               <p><strong>Age:</strong> {age} years</p>
-              {(age || 0) < 18 && (
-                <p><strong>Parent Email:</strong> {parentEmail}</p>
-              )}
             </div>
 
             <form onSubmit={handleCreateAccount} className={styles.form}>
-              <label className={styles.label}>Email (this will be your login ID)</label>
-              <input
-                className={styles.input}
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="your@email.com"
-                required
-              />
-
               <label className={styles.label}>Password</label>
               <input
                 className={styles.input}
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Minimum 6 characters, Caps lock & special characters - Safety first!"
+                placeholder="Minimum 6 characters"
                 required
               />
 
@@ -287,11 +349,7 @@ export default function RegisterPage() {
 
               {error && <p className={styles.error}>{error}</p>}
 
-              <button
-                type="submit"
-                className={styles.primaryBtn}
-                disabled={loading}
-              >
+              <button type="submit" className={styles.primaryBtn} disabled={loading}>
                 {loading ? "Creating Account…" : "Create Account"}
               </button>
             </form>
@@ -302,11 +360,9 @@ export default function RegisterPage() {
         {step === "success" && (
           <div className={styles.success}>
             <div className={styles.successIcon}>✓</div>
-            <h1 className={styles.title}>Account Created!🔥</h1>
+            <h1 className={styles.title}>Account Created!</h1>
             <p className={styles.subtitle}>
-              We have sent a verification link to your email.
-              <br />
-              Please check your inbox (and spam folder) and click the link.
+              Your verified account is ready.
             </p>
             <button
               className={styles.primaryBtn}
