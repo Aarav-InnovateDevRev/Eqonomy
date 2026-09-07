@@ -44,7 +44,9 @@ export async function ensureUserProfile(user: User): Promise<UserProfile> {
   updatedAt: Date.now(),
   completedOpportunitiesCount: 0,
   reputationScore: 50,
-  walletBalance: 0, // ← new field
+  walletBalance: 0, 
+  isGovtVerified: false,
+  parentVerified: false,
 };
 
   await setDoc(userRef, {
