@@ -1,34 +1,49 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
+  RecaptchaVerifier,
+  signInWithPhoneNumber,
   createUserWithEmailAndPassword,
   updateProfile,
+  PhoneAuthProvider,
+  signInWithCredential,
 } from "firebase/auth";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import styles from "./register.module.scss";
 
-type Step = "aadhaar" | "parent" | "credentials" | "success";
+declare global {
+  interface Window {
+    recaptchaVerifier: any;
+  }
+}
+
+type Step = "details" | "otp" | "parent" | "parent-otp" | "credentials" | "success";
 
 export default function RegisterPage() {
   const router = useRouter();
 
-  const [step, setStep] = useState<Step>("aadhaar");
+  const [step, setStep] = useState<Step>("details");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Aadhaar / Verified data
+  // User details
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [age, setAge] = useState<number | null>(null);
 
-  // Parent verification (if minor)
+  // OTP
+  const [otp, setOtp] = useState("");
+  const [confirmationResult, setConfirmationResult] = useState<any>(null);
+
+  // Parent
   const [parentPhone, setParentPhone] = useState("");
   const [parentOtp, setParentOtp] = useState("");
+  const [parentConfirmation, setParentConfirmation] = useState<any>(null);
   const [parentVerified, setParentVerified] = useState(false);
 
   // Credentials
@@ -36,19 +51,27 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  // Calculate age from DOB
+  // Setup reCAPTCHA
+  useEffect(() => {
+    if (typeof window !== "undefined" && !window.recaptchaVerifier) {
+      window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
+        size: "invisible",
+        callback: () => {},
+      });
+    }
+  }, []);
+
   const calculateAge = (dob: string): number => {
     const birth = new Date(dob);
     const today = new Date();
-    let calculatedAge = today.getFullYear() - birth.getFullYear();
-    const monthDiff = today.getMonth() - birth.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-      calculatedAge--;
-    }
-    return calculatedAge;
+    let a = today.getFullYear() - birth.getFullYear();
+    const m = today.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) a--;
+    return a;
   };
 
-  const handleAadhaarSubmit = (e: React.FormEvent) => {
+  // Step 1: Submit details + send OTP
+  const handleDetailsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
@@ -57,45 +80,96 @@ export default function RegisterPage() {
       return;
     }
 
-    if (phone.length < 10) {
+    if (phone.length !== 10) {
       setError("Enter a valid 10-digit phone number");
       return;
     }
 
     const calculatedAge = calculateAge(dateOfBirth);
-    setAge(calculatedAge);
-
     if (calculatedAge < 13) {
-      setError("You must be at least 13 years old to join Eqonomy");
+      setError("You must be at least 13 years old");
       return;
     }
 
-    if (calculatedAge < 18) {
-      setStep("parent");
-    } else {
-      setStep("credentials");
+    setAge(calculatedAge);
+    setLoading(true);
+
+    try {
+      const appVerifier = window.recaptchaVerifier;
+      const formattedPhone = "+91" + phone;
+
+      const result = await signInWithPhoneNumber(auth, formattedPhone, appVerifier);
+      setConfirmationResult(result);
+      setStep("otp");
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || "Failed to send OTP. Try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleParentVerify = (e: React.FormEvent) => {
+  // Step 2: Verify OTP
+  const handleOtpSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    try {
+      await confirmationResult.confirm(otp);
+
+      if ((age || 0) < 18) {
+        setStep("parent");
+      } else {
+        setStep("credentials");
+      }
+    } catch (err) {
+      setError("Invalid OTP. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Step 3: Parent phone + OTP
+  const handleParentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
-    if (!parentPhone || parentPhone.length < 10) {
+    if (parentPhone.length !== 10) {
       setError("Enter a valid parent phone number");
       return;
     }
 
-    // Mock OTP – in real version we will send actual OTP
-    if (parentOtp !== "123456") {
-      setError("Invalid OTP. For testing use: 123456");
-      return;
+    setLoading(true);
+    try {
+      const appVerifier = window.recaptchaVerifier;
+      const result = await signInWithPhoneNumber(auth, "+91" + parentPhone, appVerifier);
+      setParentConfirmation(result);
+      setStep("parent-otp");
+    } catch (err: any) {
+      setError(err.message || "Failed to send parent OTP");
+    } finally {
+      setLoading(false);
     }
-
-    setParentVerified(true);
-    setStep("credentials");
   };
 
+  const handleParentOtpSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    try {
+      await parentConfirmation.confirm(parentOtp);
+      setParentVerified(true);
+      setStep("credentials");
+    } catch (err) {
+      setError("Invalid parent OTP");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Step 4: Create permanent account
   const handleCreateAccount = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -114,18 +188,11 @@ export default function RegisterPage() {
         return;
       }
 
-      // Create Firebase Auth user
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Update display name
       await updateProfile(user, { displayName: name });
 
-      // Create verified profile in Firestore
       await setDoc(doc(db, "users", user.uid), {
         uid: user.uid,
         email,
@@ -133,14 +200,15 @@ export default function RegisterPage() {
         phone: phone.trim(),
         dateOfBirth,
         age,
-        isGovtVerified: true,
+        isGovtVerified: false,
+        isPhoneVerified: true,
         isMinor: (age || 0) < 18,
         parentPhone: (age || 0) < 18 ? parentPhone : null,
         parentVerified: (age || 0) < 18 ? parentVerified : true,
         role: "seeker",
         displayName: name.trim(),
         skills: [],
-        verificationStatus: "verified",
+        verificationStatus: "phone_verified",
         walletBalance: 0,
         completedOpportunitiesCount: 0,
         reputationScore: 50,
@@ -163,32 +231,35 @@ export default function RegisterPage() {
 
   return (
     <div className={styles.page}>
+      <div id="recaptcha-container"></div>
+
       <div className={styles.card}>
         <div className={styles.logo}>
           <img src="/logo.png" alt="Eqonomy" className={styles.logoImg} />
           <span>EQONOMY</span>
         </div>
 
-        {/* STEP 1: Aadhaar / Identity */}
-        {step === "aadhaar" && (
+        {/* STEP: Details */}
+        {step === "details" && (
           <>
-            <h1>Verify your Identity</h1>
+            <h1 className={styles.title}>Create your Account</h1>
             <p className={styles.subtitle}>
-              This is a temporary mock verification. Later this will connect to Aadhaar / DigiLocker.
+              Verify your phone number to join Eqonomy.
             </p>
 
-            <form onSubmit={handleAadhaarSubmit} className={styles.form}>
-              <label>Full Name (as per Aadhaar)</label>
+            <form onSubmit={handleDetailsSubmit} className={styles.form}>
+              <label className={styles.label}>Full Name</label>
               <input
-                type="text"
+                className={styles.input}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Enter your full name"
                 required
               />
 
-              <label>Phone Number</label>
+              <label className={styles.label}>Phone Number</label>
               <input
+                className={styles.input}
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
@@ -196,8 +267,9 @@ export default function RegisterPage() {
                 required
               />
 
-              <label>Date of Birth</label>
+              <label className={styles.label}>Date of Birth</label>
               <input
+                className={styles.input}
                 type="date"
                 value={dateOfBirth}
                 onChange={(e) => setDateOfBirth(e.target.value)}
@@ -206,24 +278,52 @@ export default function RegisterPage() {
 
               {error && <p className={styles.error}>{error}</p>}
 
-              <button type="submit" className={styles.primaryBtn}>
-                Continue
+              <button type="submit" className={styles.primaryBtn} disabled={loading}>
+                {loading ? "Sending OTP…" : "Send OTP"}
               </button>
             </form>
           </>
         )}
 
-        {/* STEP 2: Parent Verification (Minors) */}
+        {/* STEP: OTP */}
+        {step === "otp" && (
+          <>
+            <h1 className={styles.title}>Enter OTP</h1>
+            <p className={styles.subtitle}>
+              We sent a code to +91 {phone}
+            </p>
+
+            <form onSubmit={handleOtpSubmit} className={styles.form}>
+              <label className={styles.label}>OTP</label>
+              <input
+                className={styles.input}
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+                placeholder="Enter 6-digit OTP"
+                required
+              />
+
+              {error && <p className={styles.error}>{error}</p>}
+
+              <button type="submit" className={styles.primaryBtn} disabled={loading}>
+                {loading ? "Verifying…" : "Verify OTP"}
+              </button>
+            </form>
+          </>
+        )}
+
+        {/* STEP: Parent Phone */}
         {step === "parent" && (
           <>
-            <h1>Parent Verification Required</h1>
+            <h1 className={styles.title}>Parent Verification</h1>
             <p className={styles.subtitle}>
               You are under 18. Please verify a parent’s phone number.
             </p>
 
-            <form onSubmit={handleParentVerify} className={styles.form}>
-              <label>Parent Phone Number</label>
+            <form onSubmit={handleParentSubmit} className={styles.form}>
+              <label className={styles.label}>Parent Phone Number</label>
               <input
+                className={styles.input}
                 type="tel"
                 value={parentPhone}
                 onChange={(e) => setParentPhone(e.target.value)}
@@ -231,44 +331,61 @@ export default function RegisterPage() {
                 required
               />
 
-              <label>Enter OTP</label>
-              <input
-                type="text"
-                value={parentOtp}
-                onChange={(e) => setParentOtp(e.target.value)}
-                placeholder="Enter OTP (use 123456 for testing)"
-                required
-              />
-
               {error && <p className={styles.error}>{error}</p>}
 
-              <button type="submit" className={styles.primaryBtn}>
-                Verify Parent
+              <button type="submit" className={styles.primaryBtn} disabled={loading}>
+                {loading ? "Sending OTP…" : "Send Parent OTP"}
               </button>
             </form>
           </>
         )}
 
-        {/* STEP 3: Create Credentials */}
+        {/* STEP: Parent OTP */}
+        {step === "parent-otp" && (
+          <>
+            <h1 className={styles.title}>Enter Parent OTP</h1>
+            <p className={styles.subtitle}>
+              Code sent to +91 {parentPhone}
+            </p>
+
+            <form onSubmit={handleParentOtpSubmit} className={styles.form}>
+              <label className={styles.label}>OTP</label>
+              <input
+                className={styles.input}
+                value={parentOtp}
+                onChange={(e) => setParentOtp(e.target.value)}
+                placeholder="Enter 6-digit OTP"
+                required
+              />
+
+              {error && <p className={styles.error}>{error}</p>}
+
+              <button type="submit" className={styles.primaryBtn} disabled={loading}>
+                {loading ? "Verifying…" : "Verify Parent"}
+              </button>
+            </form>
+          </>
+        )}
+
+        {/* STEP: Credentials */}
         {step === "credentials" && (
           <>
-            <h1>Create your Account</h1>
+            <h1 className={styles.title}>Create Login Details</h1>
             <p className={styles.subtitle}>
-              Your identity has been verified. Now set your login details.
+              Your phone is verified. Now set your permanent login.
             </p>
 
             <div className={styles.verifiedBox}>
               <p><strong>Name:</strong> {name}</p>
-              <p><strong>Phone:</strong> {phone}</p>
+              <p><strong>Phone:</strong> +91 {phone} ✓</p>
               <p><strong>Age:</strong> {age} years</p>
-              {(age || 0) < 18 && (
-                <p><strong>Parent Verified:</strong> Yes</p>
-              )}
+              {(age || 0) < 18 && <p><strong>Parent:</strong> Verified ✓</p>}
             </div>
 
             <form onSubmit={handleCreateAccount} className={styles.form}>
-              <label>Email</label>
+              <label className={styles.label}>Email (will be your login ID)</label>
               <input
+                className={styles.input}
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -276,8 +393,9 @@ export default function RegisterPage() {
                 required
               />
 
-              <label>Password</label>
+              <label className={styles.label}>Password</label>
               <input
+                className={styles.input}
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -285,8 +403,9 @@ export default function RegisterPage() {
                 required
               />
 
-              <label>Confirm Password</label>
+              <label className={styles.label}>Confirm Password</label>
               <input
+                className={styles.input}
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
@@ -296,23 +415,19 @@ export default function RegisterPage() {
 
               {error && <p className={styles.error}>{error}</p>}
 
-              <button
-                type="submit"
-                className={styles.primaryBtn}
-                disabled={loading}
-              >
+              <button type="submit" className={styles.primaryBtn} disabled={loading}>
                 {loading ? "Creating Account…" : "Create Account"}
               </button>
             </form>
           </>
         )}
 
-        {/* STEP 4: Success */}
+        {/* SUCCESS */}
         {step === "success" && (
           <div className={styles.success}>
             <div className={styles.successIcon}>✓</div>
-            <h1>Account Created!</h1>
-            <p>Your government-verified account is ready.</p>
+            <h1 className={styles.title}>Account Created!</h1>
+            <p className={styles.subtitle}>Your verified account is ready.</p>
             <button
               className={styles.primaryBtn}
               onClick={() => router.push("/dashboard")}
@@ -323,7 +438,7 @@ export default function RegisterPage() {
         )}
 
         <p className={styles.footer}>
-          Already have an account? <Link href="/login">Login</Link>
+          Already have an account? <Link href="/login">Log in</Link>
         </p>
       </div>
     </div>

@@ -1,77 +1,36 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import {
-  isSignInWithEmailLink,
-  signInWithEmailLink,
-  sendSignInLinkToEmail,
-} from "firebase/auth";
+import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import styles from "./login.module.scss";
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const [showMagicLink, setShowMagicLink] = useState(false);
 
-  // Handle Magic Link completion
-  useEffect(() => {
-    const completeSignIn = async () => {
-      if (isSignInWithEmailLink(auth, window.location.href)) {
-        let emailForSignIn = window.localStorage.getItem("emailForSignIn");
-
-        if (!emailForSignIn) {
-          emailForSignIn = window.prompt("Please provide your email for confirmation");
-        }
-
-        if (emailForSignIn) {
-          try {
-            setLoading(true);
-            await signInWithEmailLink(auth, emailForSignIn, window.location.href);
-            window.localStorage.removeItem("emailForSignIn");
-            window.history.replaceState({}, document.title, "/login");
-            router.push("/dashboard");
-          } catch (err: any) {
-            console.error(err);
-            if (err.code === "auth/invalid-action-code") {
-              setError("This magic link is invalid or has already been used.");
-            } else {
-              setError("Failed to sign in. Please try again.");
-            }
-            window.history.replaceState({}, document.title, "/login");
-          } finally {
-            setLoading(false);
-          }
-        }
-      }
-    };
-
-    completeSignIn();
-  }, [router]);
-
-  const handleSendMagicLink = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError("");
-    setMessage("");
+    setLoading(true);
 
     try {
-      const actionCodeSettings = {
-        url: window.location.origin + "/login",
-        handleCodeInApp: true,
-      };
-
-      await sendSignInLinkToEmail(auth, email, actionCodeSettings);
-      window.localStorage.setItem("emailForSignIn", email);
-      setMessage("Magic link sent! Check your email (and spam folder).");
-    } catch (err) {
+      await signInWithEmailAndPassword(auth, email, password);
+      router.push("/dashboard");
+    } catch (err: any) {
       console.error(err);
-      setError("Failed to send magic link. Please try again.");
+      if (err.code === "auth/user-not-found" || err.code === "auth/wrong-password") {
+        setError("Invalid email or password");
+      } else if (err.code === "auth/invalid-credential") {
+        setError("Invalid email or password");
+      } else {
+        setError("Failed to login. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -117,76 +76,47 @@ export default function LoginPage() {
         {/* Right Form Side */}
         <div className={styles.formSide}>
           <div className={styles.formCard}>
-            {!showMagicLink ? (
-              <>
-                <h2 className={styles.formTitle}>Get Started</h2>
-                <p className={styles.formSubtitle}>
-                  Verify your identity and join Eqonomy in minutes.
-                </p>
+            <h2 className={styles.formTitle}>Welcome back</h2>
+            <p className={styles.formSubtitle}>
+              Log in with your Eqonomy account.
+            </p>
 
-                <button
-                  type="button"
-                  className={styles.primaryBtn}
-                  onClick={() => router.push("/register")}
-                >
-                  Let’s Begin →
-                </button>
+            <form onSubmit={handleLogin} className={styles.form}>
+              <label className={styles.label}>Email</label>
+              <input
+                type="email"
+                className={styles.input}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="your@email.com"
+                required
+              />
 
-                <div className={styles.divider}>
-                  <span>or</span>
-                </div>
+              <label className={styles.label}>Password</label>
+              <input
+                type="password"
+                className={styles.input}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
+                required
+              />
 
-                <button
-                  type="button"
-                  className={styles.secondaryBtn}
-                  onClick={() => setShowMagicLink(true)}
-                >
-                  Login with Magic Link
-                </button>
-              </>
-            ) : (
-              <>
-                <h2 className={styles.formTitle}>Magic Link Login</h2>
-                <p className={styles.formSubtitle}>
-                  Enter your email and we’ll send you a secure login link.
-                </p>
+              {error && <p className={styles.error}>{error}</p>}
 
-                <form onSubmit={handleSendMagicLink} className={styles.form}>
-                  <label className={styles.label}>Email address</label>
-                  <input
-                    type="email"
-                    className={styles.input}
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="your@email.com"
-                    required
-                  />
+              <button
+                type="submit"
+                className={styles.primaryBtn}
+                disabled={loading}
+              >
+                {loading ? "Logging in…" : "Log In"}
+              </button>
+            </form>
 
-                  {error && <p className={styles.error}>{error}</p>}
-                  {message && <p className={styles.success}>{message}</p>}
-
-                  <button
-                    type="submit"
-                    className={styles.primaryBtn}
-                    disabled={loading}
-                  >
-                    {loading ? "Sending…" : "Send Magic Link"}
-                  </button>
-                </form>
-
-                <button
-                  type="button"
-                  className={styles.backLink}
-                  onClick={() => {
-                    setShowMagicLink(false);
-                    setError("");
-                    setMessage("");
-                  }}
-                >
-                  ← Back
-                </button>
-              </>
-            )}
+            <p className={styles.footer}>
+              Don’t have an account?{" "}
+              <Link href="/register">Create Account</Link>
+            </p>
           </div>
         </div>
       </div>
