@@ -11,8 +11,11 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "Eqonomy — Want to do It?",
-  description:
-    "Airbnb-inspired opportunity marketplace. Delhi-first. Hosts-first.",
+  description: "Airbnb-inspired opportunity marketplace. Delhi-first. Hosts-first.",
+  icons: {
+    icon: "/logo.png",          
+    apple: "/logo.png",
+  },
 };
 
 export default function RootLayout({
