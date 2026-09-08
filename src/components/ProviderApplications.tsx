@@ -29,7 +29,10 @@ interface Props {
   opportunityTitle: string;
 }
 
-export default function ProviderApplications({ opportunityId, opportunityTitle }: Props) {
+export default function ProviderApplications({
+  opportunityId,
+  opportunityTitle,
+}: Props) {
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -73,7 +76,6 @@ export default function ProviderApplications({ opportunityId, opportunityTitle }
         updatedAt: serverTimestamp(),
       });
 
-      // Notify the applicant
       await addDoc(collection(db, "notifications"), {
         userId: app.seekerId,
         title: "Your application was liked!",
@@ -102,7 +104,6 @@ export default function ProviderApplications({ opportunityId, opportunityTitle }
         updatedAt: serverTimestamp(),
       });
 
-      // Notify the applicant
       await addDoc(collection(db, "notifications"), {
         userId: app.seekerId,
         title: "You have been selected!",
@@ -121,6 +122,41 @@ export default function ProviderApplications({ opportunityId, opportunityTitle }
     } finally {
       setActionLoading(null);
     }
+  };
+
+  const handleMarkCompleted = async (app: Application) => {
+    setActionLoading(app.id);
+    try {
+      await updateDoc(doc(db, "applications", app.id), {
+        status: "completed",
+        updatedAt: serverTimestamp(),
+      });
+
+      await addDoc(collection(db, "notifications"), {
+        userId: app.seekerId,
+        title: "Work marked as completed",
+        body: `The provider marked the work for "${opportunityTitle}" as completed. Payment will be processed next.`,
+        type: "completed",
+        read: false,
+        link: `/dashboard/opportunity/${opportunityId}`,
+        createdAt: serverTimestamp(),
+      });
+
+      setApplications((prev) =>
+        prev.map((a) => (a.id === app.id ? { ...a, status: "completed" } : a))
+      );
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handlePayment = (app: Application) => {
+    // Placeholder for real payment later
+    alert(
+      `Payment for ${app.seekerName}\n\nThis will open the real payment system later.\nFor now this is just a placeholder.`
+    );
   };
 
   if (loading) return <p>Loading applications…</p>;
@@ -145,15 +181,32 @@ export default function ProviderApplications({ opportunityId, opportunityTitle }
                 background: "#f8fafc",
               }}
             >
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  marginBottom: "0.5rem",
+                }}
+              >
                 <strong>{app.seekerName}</strong>
                 <span
                   style={{
                     fontSize: "0.8rem",
                     padding: "0.2rem 0.6rem",
                     borderRadius: "20px",
-                    background: app.status === "selected" ? "#d1fae5" : "#e0e7ff",
-                    color: app.status === "selected" ? "#065f46" : "#3730a3",
+                    background:
+                      app.status === "completed"
+                        ? "#d1fae5"
+                        : app.status === "selected"
+                        ? "#dbeafe"
+                        : "#e0e7ff",
+                    color:
+                      app.status === "completed"
+                        ? "#065f46"
+                        : app.status === "selected"
+                        ? "#1e40af"
+                        : "#3730a3",
+                    textTransform: "capitalize",
                   }}
                 >
                   {app.status}
@@ -165,12 +218,19 @@ export default function ProviderApplications({ opportunityId, opportunityTitle }
               </p>
 
               {app.coverMessage && (
-                <p style={{ fontSize: "0.9rem", color: "#475569", marginBottom: "0.8rem" }}>
+                <p
+                  style={{
+                    fontSize: "0.9rem",
+                    color: "#475569",
+                    marginBottom: "0.8rem",
+                  }}
+                >
                   “{app.coverMessage}”
                 </p>
               )}
 
-              <div style={{ display: "flex", gap: "0.6rem" }}>
+              <div style={{ display: "flex", gap: "0.6rem", flexWrap: "wrap" }}>
+                {/* Like */}
                 <button
                   onClick={() => handleLike(app)}
                   disabled={app.liked || actionLoading === app.id}
@@ -186,7 +246,8 @@ export default function ProviderApplications({ opportunityId, opportunityTitle }
                   {app.liked ? "♥ Liked" : "♡ Like"}
                 </button>
 
-                {app.status !== "selected" && (
+                {/* Select */}
+                {app.status === "pending" && (
                   <button
                     onClick={() => handleSelect(app)}
                     disabled={actionLoading === app.id}
@@ -201,6 +262,43 @@ export default function ProviderApplications({ opportunityId, opportunityTitle }
                     }}
                   >
                     Select & Reply
+                  </button>
+                )}
+
+                {/* Mark as Completed */}
+                {app.status === "selected" && (
+                  <button
+                    onClick={() => handleMarkCompleted(app)}
+                    disabled={actionLoading === app.id}
+                    style={{
+                      padding: "0.5rem 1rem",
+                      borderRadius: "8px",
+                      border: "none",
+                      background: "#059669",
+                      color: "white",
+                      cursor: "pointer",
+                      fontWeight: 500,
+                    }}
+                  >
+                    Mark as Completed
+                  </button>
+                )}
+
+                {/* Payment (placeholder) */}
+                {app.status === "completed" && (
+                  <button
+                    onClick={() => handlePayment(app)}
+                    style={{
+                      padding: "0.5rem 1rem",
+                      borderRadius: "8px",
+                      border: "none",
+                      background: "#7c3aed",
+                      color: "white",
+                      cursor: "pointer",
+                      fontWeight: 500,
+                    }}
+                  >
+                    Pay Now
                   </button>
                 )}
               </div>
