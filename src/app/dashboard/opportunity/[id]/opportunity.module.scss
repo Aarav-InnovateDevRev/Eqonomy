@@ -154,10 +154,33 @@
 
 /* Apply section */
 .label {
-  display: block;
   font-size: 0.85rem;
-  font-weight: 500;
-  margin-bottom: 0.4rem;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 0.35rem;
+  display: block;
+}
+
+.input {
+  padding: 0.85rem 1.1rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  width: 100%;
+  background: #f8fafc;
+  transition: all 0.2s ease;
+  margin-bottom: 1rem;
+
+  &:focus {
+    outline: none;
+    border-color: #2563eb;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+  }
+
+  &::placeholder {
+    color: #94a3b8;
+  }
 }
 
 .textarea {
@@ -169,11 +192,6 @@
   resize: vertical;
   min-height: 100px;
 
-  &:focus {
-    outline: none;
-    border-color: var(--color-accent);
-  }
-}
 
 .applyBtn {
   width: 100%;
@@ -257,4 +275,5 @@
   font-weight: 600;
   color: var(--color-primary) !important;
   margin-top: 0.5rem !important;
+}
 }

@@ -134,15 +134,16 @@ export default function OpportunityDetailPage() {
       });
 
       // Create in-app notification for the Host
-      await addDoc(collection(db, "notifications"), {
-        userId: opportunity.providerId,
-        title: "New Application Received",
-        body: `${profile.displayName || "Someone"} applied to your opportunity: ${opportunity.title}`,
-        type: "application",
-        read: false,
-        link: `/dashboard/opportunity/${opportunity.id}`,
-        createdAt: serverTimestamp(),
-      });
+await addDoc(collection(db, "notifications"), {
+  userId: opportunity.providerId,
+  title: "New Application Received",
+  body: `${profile.displayName || "Someone"} applied to "${opportunity.title}". Phone: ${applicantPhone ? `+91${applicantPhone}` : "Not provided"}`,
+  type: "application",
+  read: false,
+  link: `/dashboard/opportunity/${opportunity.id}`,
+  applicationId: null, 
+  createdAt: serverTimestamp(),
+});
 
       await addDoc(collection(db, "applications"), {
         opportunityId: opportunity.id,
