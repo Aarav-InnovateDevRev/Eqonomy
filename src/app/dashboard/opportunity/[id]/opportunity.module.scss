@@ -194,20 +194,22 @@
 
 
 .applyBtn {
+  display: block;
   width: 100%;
-  padding: 0.95rem;
-  background: #2563eb;
-  color: white;
+  padding: 0.95rem 1.2rem;
+  background-color: #2563eb !important;
+  color: #ffffff !important;
   font-weight: 600;
   font-size: 1rem;
   border-radius: 12px;
-  border: none;
+  border: none !important;
   cursor: pointer;
-  margin-top: 0.5rem;
+  margin-top: 1rem;
+  text-align: center;
   transition: background 0.2s ease;
 
   &:hover:not(:disabled) {
-    background: #1d4ed8;
+    background-color: #1d4ed8 !important;
   }
 
   &:disabled {
