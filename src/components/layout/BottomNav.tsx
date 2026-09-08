@@ -11,6 +11,7 @@ const navItems = [
   { href: AURA_TRACK_URL, label: "Aura", icon: "aura", external: true },
   { href: "/dashboard/create", label: "Add", icon: "add", isCenter: true },
   { href: "/dashboard/portfolio", label: "Portfolio", icon: "portfolio" },
+  { href: "/dashboard/wallet", label: "Wallet", icon: "wallet" },
   { href: "/dashboard/notifications", label: "Alerts", icon: "bell" },
   { href: "/dashboard/profile", label: "Profile", icon: "profile" },
 ];
