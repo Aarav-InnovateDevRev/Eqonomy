@@ -234,47 +234,37 @@ export default function DashboardPage() {
           {/* Filters */}
           <section className={styles.filtersSection}>
             <div className={styles.filters}>
-              <button
-                className={`${styles.filterChip} ${
-                  activeFilter === "all" ? styles.active : ""
-                }`}
-                onClick={() => setActiveFilter("all")}
-              >
-                All
-              </button>
-              <button
-                className={`${styles.filterChip} ${
-                  activeFilter === "paid" ? styles.active : ""
-                }`}
-                onClick={() => setActiveFilter("paid")}
-              >
-                Paid Projects
-              </button>
-              <button
-                className={`${styles.filterChip} ${
-                  activeFilter === "challenge" ? styles.active : ""
-                }`}
-                onClick={() => setActiveFilter("challenge")}
-              >
-                Challenges
-              </button>
-              <button
-                className={`${styles.filterChip} ${
-                  activeFilter === "guidance" ? styles.active : ""
-                }`}
-                onClick={() => setActiveFilter("guidance")}
-              >
-                Guidance
-              </button>
-              <button
-                className={`${styles.filterChip} ${
-                  activeFilter === "internship" ? styles.active : ""
-                }`}
-                onClick={() => setActiveFilter("internship")}
-              >
-                Internships
-              </button>
-            </div>
+  <button
+    className={`${styles.filterChip} ${activeFilter === "all" ? styles.active : ""}`}
+    onClick={() => setActiveFilter("all")}
+  >
+    All
+  </button>
+  <button
+    className={`${styles.filterChip} ${activeFilter === "paid_project" ? styles.active : ""}`}
+    onClick={() => setActiveFilter("paid_project")}
+  >
+    Paid Projects
+  </button>
+  <button
+    className={`${styles.filterChip} ${activeFilter === "challenge" ? styles.active : ""}`}
+    onClick={() => setActiveFilter("challenge")}
+  >
+    Challenges
+  </button>
+  <button
+    className={`${styles.filterChip} ${activeFilter === "guidance" ? styles.active : ""}`}
+    onClick={() => setActiveFilter("guidance")}
+  >
+    Guidance
+  </button>
+  <button
+    className={`${styles.filterChip} ${activeFilter === "internship" ? styles.active : ""}`}
+    onClick={() => setActiveFilter("internship")}
+  >
+    Internships
+  </button>
+</div>
           </section>
 
           {/* Feed */}
