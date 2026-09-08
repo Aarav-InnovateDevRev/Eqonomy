@@ -118,63 +118,55 @@ export default function OpportunityDetailPage() {
     return;
   }
 
-    setApplying(true);
-    setMessage("");
+  if (!applicantPhone || applicantPhone.length < 10) {
+    setMessage("Please enter a valid 10-digit phone number.");
+    return;
+  }
 
-    try {
-      // Create application 
-      await addDoc(collection(db, "applications"), {
-        opportunityId: opportunity.id,
-        seekerId: user.uid,
-        seekerName: profile.displayName || "Anonymous",
-        status: "pending",
-        coverMessage: coverMessage.trim() || "",
-        amountPaid: 0,
-        platformFee: 0,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
+  setApplying(true);
+  setMessage("");
 
-      // Increase application count
-      await updateDoc(doc(db, "opportunities", opportunity.id), {
-        applicationCount: increment(1),
-      });
+  try {
+    // Create application (only once)
+    await addDoc(collection(db, "applications"), {
+      opportunityId: opportunity.id,
+      seekerId: user.uid,
+      seekerName: profile.displayName || profile.name || "Anonymous",
+      seekerPhone: `+91${applicantPhone}`,
+      status: "pending",
+      coverMessage: coverMessage.trim() || "",
+      liked: false,
+      amountPaid: 0,
+      platformFee: 0,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
 
-      // Create in-app notification for the Host
-await addDoc(collection(db, "notifications"), {
-  userId: opportunity.providerId,
-  title: "New Application Received",
-  body: `${profile.displayName || "Someone"} applied to "${opportunity.title}". Phone: ${applicantPhone ? `+91${applicantPhone}` : "Not provided"}`,
-  type: "application",
-  read: false,
-  link: `/dashboard/opportunity/${opportunity.id}`,
-  applicationId: null, 
-  createdAt: serverTimestamp(),
-});
+    // Increase application count
+    await updateDoc(doc(db, "opportunities", opportunity.id), {
+      applicationCount: increment(1),
+    });
 
-      await addDoc(collection(db, "applications"), {
-        opportunityId: opportunity.id,
-        seekerId: user.uid,
-       seekerName: profile.displayName || "Anonymous",
-       seekerPhone: applicantPhone ? `+91${applicantPhone}` : null,
-       status: "pending",
-       coverMessage: coverMessage.trim() || "",
-       amountPaid: 0,
-       platformFee: 0,
-       createdAt: serverTimestamp(),
-       updatedAt: serverTimestamp(),
-      });
+    // Create in-app notification for the Host
+    await addDoc(collection(db, "notifications"), {
+      userId: opportunity.providerId,
+      title: "New Application Received",
+      body: `${profile.displayName || profile.name || "Someone"} applied to "${opportunity.title}". Phone: +91${applicantPhone}`,
+      type: "application",
+      read: false,
+      link: `/dashboard/opportunity/${opportunity.id}`,
+      createdAt: serverTimestamp(),
+    });
 
-      setHasApplied(true);
-      setMessage("Application submitted successfully! The host will be notified.");
-    } catch (err) {
-      console.error(err);
-      setMessage("Failed to apply. Please try again.");
-    } finally {
-      setApplying(false);
-    }
-  };
-
+    setHasApplied(true);
+    setMessage("Application submitted successfully! The host will be notified.");
+  } catch (err) {
+    console.error(err);
+    setMessage("Failed to apply. Please try again.");
+  } finally {
+    setApplying(false);
+  }
+};
   const formatType = (type: string) => {
     const map: Record<string, string> = {
       paid_project: "Paid Project",
