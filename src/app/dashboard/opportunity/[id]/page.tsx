@@ -307,13 +307,25 @@ export default function OpportunityDetailPage() {
       )}
 
       <button
-        type="button"
-        onClick={handleApply}
-        className={styles.applyBtn}
-        disabled={applying}
-      >
-        {applying ? "Submitting…" : "Submit Application"}
-      </button>
+  type="button"
+  onClick={handleApply}
+  disabled={applying}
+  style={{
+    display: "block",
+    width: "100%",
+    padding: "0.95rem 1.2rem",
+    backgroundColor: "#2563eb",
+    color: "#ffffff",
+    fontWeight: 600,
+    fontSize: "1rem",
+    borderRadius: "12px",
+    border: "none",
+    cursor: "pointer",
+    marginTop: "1rem",
+  }}
+>
+  {applying ? "Submitting…" : "Submit Application"}
+</button>
     </>
   )}
 </section>
