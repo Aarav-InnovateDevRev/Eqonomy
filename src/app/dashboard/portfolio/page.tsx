@@ -9,7 +9,6 @@ import {
   query,
   where,
   getDocs,
-  orderBy,
 } from "firebase/firestore";
 import BottomNav from "@/components/layout/BottomNav";
 import { subscribeToAuth, ensureUserProfile } from "@/lib/auth";
@@ -24,7 +23,6 @@ interface PortfolioItem {
   status: string;
   role: "provider" | "seeker";
   otherPerson: string;
-  createdAt: any;
 }
 
 export default function PortfolioPage() {
@@ -58,43 +56,32 @@ export default function PortfolioPage() {
       try {
         const list: PortfolioItem[] = [];
 
-        // 1. Applications where user was selected (as seeker)
+        // Selected applications (as seeker)
         const seekerQ = query(
           collection(db, "applications"),
-          where("seekerId", "==", user.uid),
-          where("status", "in", ["selected", "completed"])
+          where("seekerId", "==", user.uid)
         );
         const seekerSnap = await getDocs(seekerQ);
-
-        for (const d of seekerSnap.docs) {
+        seekerSnap.forEach((d) => {
           const data = d.data();
-          // Get opportunity title
-          let title = "Opportunity";
-          try {
-            const oppSnap = await getDocs(
-              query(collection(db, "opportunities"), where("__name__", "==", data.opportunityId))
-            );
-            // simpler way:
-          } catch {}
-          
-          list.push({
-            id: d.id,
-            title: data.opportunityTitle || "Selected Opportunity",
-            type: "application",
-            status: data.status,
-            role: "seeker",
-            otherPerson: data.providerName || "Provider",
-            createdAt: data.createdAt,
-          });
-        }
+          if (data.status === "selected" || data.status === "completed") {
+            list.push({
+              id: d.id,
+              title: data.opportunityTitle || "Selected Opportunity",
+              type: "application",
+              status: data.status,
+              role: "seeker",
+              otherPerson: "Provider",
+            });
+          }
+        });
 
-        // 2. Opportunities the user posted that have selected applications
+        // Opportunities posted by user
         const providerQ = query(
           collection(db, "opportunities"),
           where("providerId", "==", user.uid)
         );
         const providerSnap = await getDocs(providerQ);
-
         providerSnap.forEach((d) => {
           const data = d.data();
           list.push({
@@ -104,7 +91,6 @@ export default function PortfolioPage() {
             status: data.status || "open",
             role: "provider",
             otherPerson: "Your posting",
-            createdAt: data.createdAt,
           });
         });
 
@@ -119,6 +105,9 @@ export default function PortfolioPage() {
     load();
   }, [user]);
 
+  const selectedCount = items.filter((i) => i.status === "selected" || i.status === "completed").length;
+  const postedCount = items.filter((i) => i.role === "provider").length;
+
   if (loading) {
     return (
       <div className={styles.loadingScreen}>
@@ -132,34 +121,59 @@ export default function PortfolioPage() {
       <main className={`${styles.page} page-with-bottom-nav`}>
         <header className={styles.header}>
           <div className={styles.headerInner}>
-            <h1>My Portfolio</h1>
+            <Link href="/dashboard" className={styles.backBtn}>
+              ← Back
+            </Link>
+            <h1>Portfolio</h1>
+            <div style={{ width: 60 }} />
           </div>
         </header>
 
         <div className={styles.content}>
-          {/* Profile Summary */}
-          <section className={styles.summaryCard}>
-            <h2>{profile?.name || profile?.displayName || "User"}</h2>
-            <p className={styles.email}>{profile?.email}</p>
-            <div className={styles.badges}>
-              {profile?.isEmailVerified && (
-                <span className={styles.badge}>Email Verified</span>
-              )}
-              {profile?.isPhoneVerified && (
-                <span className={styles.badge}>Phone Verified</span>
-              )}
+          {/* Profile Card */}
+          <section className={styles.profileCard}>
+            <div className={styles.avatar}>
+              {(profile?.name || profile?.displayName || "U").charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <h2>{profile?.name || profile?.displayName || "User"}</h2>
+              <p className={styles.email}>{profile?.email}</p>
+              <div className={styles.badges}>
+                {profile?.isEmailVerified && (
+                  <span className={styles.badge}>Email Verified</span>
+                )}
+                {(profile?.verificationStatus as string) === "email_verified" && (
+                  <span className={styles.badge}>Verified</span>
+                )}
+              </div>
             </div>
           </section>
 
-          {/* Completed / Selected Work */}
+          {/* Stats */}
+          <div className={styles.statsRow}>
+            <div className={styles.statCard}>
+              <span className={styles.statNumber}>{postedCount}</span>
+              <span className={styles.statLabel}>Posted</span>
+            </div>
+            <div className={styles.statCard}>
+              <span className={styles.statNumber}>{selectedCount}</span>
+              <span className={styles.statLabel}>Selected</span>
+            </div>
+            <div className={styles.statCard}>
+              <span className={styles.statNumber}>{items.length}</span>
+              <span className={styles.statLabel}>Total</span>
+            </div>
+          </div>
+
+          {/* Work List */}
           <section className={styles.section}>
             <h3 className={styles.sectionTitle}>Work & Sessions</h3>
 
             {items.length === 0 ? (
               <div className={styles.emptyState}>
-                <p>No completed work or sessions yet.</p>
+                <p>No work or sessions yet.</p>
                 <p className={styles.hint}>
-                  When you get selected for opportunities or complete guidance sessions, they will appear here.
+                  When you get selected or post opportunities, they will appear here.
                 </p>
               </div>
             ) : (
@@ -170,7 +184,15 @@ export default function PortfolioPage() {
                       <span className={styles.roleBadge}>
                         {item.role === "seeker" ? "You worked on" : "You posted"}
                       </span>
-                      <span className={styles.statusBadge}>{item.status}</span>
+                      <span
+                        className={`${styles.statusBadge} ${
+                          item.status === "selected" || item.status === "completed"
+                            ? styles.success
+                            : ""
+                        }`}
+                      >
+                        {item.status}
+                      </span>
                     </div>
                     <h4 className={styles.itemTitle}>{item.title}</h4>
                     <p className={styles.itemMeta}>{item.otherPerson}</p>
