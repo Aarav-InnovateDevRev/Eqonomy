@@ -109,7 +109,13 @@ export default function OpportunityDetailPage() {
   }, [id, user]);
 
   const handleApply = async () => {
-    if (!user || !profile || !opportunity) return;
+  if (!user || !profile || !opportunity) return;
+
+  // Prevent owner from applying to their own opportunity
+  if (user.uid === opportunity.providerId) {
+    setMessage("You cannot apply to your own opportunity.");
+    return;
+  }
 
     setApplying(true);
     setMessage("");
@@ -263,7 +269,11 @@ await addDoc(collection(db, "notifications"), {
 
           {/* Apply Section */}
           <section className={styles.card}>
-            {hasApplied ? (
+            {user?.uid === opportunity.providerId ? (
+              <div className={styles.appliedState}>
+                <p>This is your opportunity. You cannot apply to it.</p>
+              </div>
+            ) : hasApplied ? (
               <div className={styles.appliedState}>
                 <div className={styles.appliedIcon}>✓</div>
                 <h3>You have already applied</h3>
@@ -277,12 +287,12 @@ await addDoc(collection(db, "notifications"), {
 
                 <label className={styles.label}>Your Phone Number (+91)</label>
                 <input
-                 type="tel"
-                 className={styles.input}
-                 value={applicantPhone}
-                 onChange={(e) => setApplicantPhone(e.target.value)}
-                 placeholder="10-digit number"
-                 required
+                  type="tel"
+                  className={styles.input}
+                  value={applicantPhone}
+                  onChange={(e) => setApplicantPhone(e.target.value)}
+                  placeholder="10-digit number"
+                  required
                 />
                 <label className={styles.label}>
                   Short message (optional)
@@ -307,13 +317,14 @@ await addDoc(collection(db, "notifications"), {
                   </p>
                 )}
 
-                <button
-                  onClick={handleApply}
-                  className={styles.applyBtn}
-                  disabled={applying}
-                >
-                  {applying ? "Submitting…" : "Submit Application"}
-                </button>
+<button
+  type="button"
+  onClick={handleApply}
+  className={styles.applyBtn}
+  disabled={applying}
+>
+  {applying ? "Submitting…" : "Submit Application"}
+</button>
               </>
             )}
           </section>

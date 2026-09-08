@@ -195,20 +195,24 @@
 
 .applyBtn {
   width: 100%;
-  margin-top: 1.25rem;
-  padding: 0.9rem;
-  background: var(--color-accent);
+  padding: 0.95rem;
+  background: #2563eb;
   color: white;
   font-weight: 600;
   font-size: 1rem;
-  border-radius: 10px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  transition: background 0.2s ease;
 
   &:hover:not(:disabled) {
-    background: var(--color-accent-hover);
+    background: #1d4ed8;
   }
 
   &:disabled {
-    opacity: 0.6;
+    opacity: 0.65;
+    cursor: not-allowed;
   }
 }
 
