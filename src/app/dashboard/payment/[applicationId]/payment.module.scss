@@ -1,0 +1,173 @@
+.page {
+  min-height: 100vh;
+  background: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.card {
+  background: white;
+  border-radius: 20px;
+  padding: 2rem 1.75rem;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.08);
+}
+
+.back {
+  display: inline-block;
+  color: #64748b;
+  font-size: 0.9rem;
+  margin-bottom: 1.2rem;
+  text-decoration: none;
+
+  &:hover {
+    color: #2563eb;
+  }
+}
+
+.title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 0.3rem;
+}
+
+.subtitle {
+  color: #64748b;
+  font-size: 0.95rem;
+  margin-bottom: 1.5rem;
+}
+
+.amountBox {
+  margin-bottom: 1.3rem;
+
+  label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+    color: #334155;
+  }
+}
+
+.amountInput {
+  width: 100%;
+  padding: 0.85rem 1.1rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  background: #f8fafc;
+
+  &:focus {
+    outline: none;
+    border-color: #2563eb;
+    background: white;
+  }
+}
+
+.splitRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.8rem;
+  margin-bottom: 1.6rem;
+}
+
+.splitCard {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 0.9rem;
+  text-align: center;
+}
+
+.splitLabel {
+  display: block;
+  font-size: 0.78rem;
+  color: #64748b;
+  margin-bottom: 0.3rem;
+}
+
+.splitValue {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.paySection {
+  margin-bottom: 1.3rem;
+
+  h3 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+  }
+}
+
+.payInfo {
+  font-size: 0.9rem;
+  color: #475569;
+  margin-bottom: 0.5rem;
+}
+
+.phoneBox {
+  background: #eff6ff;
+  border: 1.5px solid #bfdbfe;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #1e40af;
+  text-align: center;
+  letter-spacing: 0.5px;
+}
+
+.note {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin: 1.2rem 0;
+  text-align: center;
+}
+
+.payBtn {
+  width: 100%;
+  padding: 0.95rem;
+  background: #2563eb;
+  color: white;
+  font-weight: 600;
+  font-size: 1rem;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: #1d4ed8;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+  }
+}
+
+.success {
+  color: #059669;
+  font-size: 0.9rem;
+  text-align: center;
+  margin-bottom: 0.8rem;
+}
+
+.error {
+  color: #dc2626;
+  font-size: 0.9rem;
+  text-align: center;
+  margin-bottom: 0.8rem;
+}
+
+.loading {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   collection,
   query,
@@ -96,6 +97,8 @@ export default function ProviderApplications({
     }
   };
 
+  const router = useRouter();
+
   const handleSelect = async (app: Application) => {
     setActionLoading(app.id);
     try {
@@ -152,12 +155,9 @@ export default function ProviderApplications({
     }
   };
 
-  const handlePayment = (app: Application) => {
-    // Placeholder for real payment later
-    alert(
-      `Payment for ${app.seekerName}\n\nThis will open the real payment system later.\nFor now this is just a placeholder.`
-    );
-  };
+ const handlePayment = (app: Application) => {
+  router.push(`/dashboard/payment/${app.id}`);
+};
 
   if (loading) return <p>Loading applications…</p>;
 
