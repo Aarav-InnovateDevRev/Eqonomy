@@ -362,6 +362,16 @@ export default function DashboardPage() {
         </div>
       </main>
 
+      <p className={styles.disclaimer}>
+  I am a student of Class 9. Any problems should please be reported to my Discord: hi_swift_96631.
+  <br />
+  By using Eqonomy you agree to our{" "}
+  <Link href="/terms" className={styles.termsLink}>
+    Terms & Conditions
+  </Link>
+  .
+</p>
+
       <BottomNav />
     </>
   );
