@@ -286,8 +286,16 @@ export default function DashboardPage() {
     </Link>
   </div>
 
-  {opportunities.filter((opp) => {
+  {opportunities
+  .filter((opp) => {
+    // 1. Category filter
+    if (activeFilter !== "all" && opp.type !== activeFilter) {
+      return false;
+    }
+
+    // 2. Search filter
     if (!searchQuery.trim()) return true;
+
     const q = searchQuery.toLowerCase();
     return (
       opp.title?.toLowerCase().includes(q) ||
