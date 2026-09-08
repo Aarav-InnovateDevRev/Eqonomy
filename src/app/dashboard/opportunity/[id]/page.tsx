@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
+import ProviderApplications from "@/components/ProviderApplications";
 import { User } from "firebase/auth";
 import {
   doc,
@@ -267,67 +268,63 @@ await addDoc(collection(db, "notifications"), {
             )}
           </article>
 
-          {/* Apply Section */}
-          <section className={styles.card}>
-            {user?.uid === opportunity.providerId ? (
-              <div className={styles.appliedState}>
-                <p>This is your opportunity. You cannot apply to it.</p>
-              </div>
-            ) : hasApplied ? (
-              <div className={styles.appliedState}>
-                <div className={styles.appliedIcon}>✓</div>
-                <h3>You have already applied</h3>
-                <p>The provider will review your application.</p>
-              </div>
-            ) : (
-              <>
-                <h3 className={styles.sectionTitle}>
-                  Apply for this opportunity
-                </h3>
+          {/* Apply Section / Applications List */}
+<section className={styles.card}>
+  {user?.uid === opportunity.providerId ? (
+    // ========== PROVIDER VIEW ==========
+    <ProviderApplications opportunityId={opportunity.id} opportunityTitle={opportunity.title} />
+  ) : hasApplied ? (
+    <div className={styles.appliedState}>
+      <div className={styles.appliedIcon}>✓</div>
+      <h3>You have already applied</h3>
+      <p>The provider will review your application.</p>
+    </div>
+  ) : (
+    <>
+      <h3 className={styles.sectionTitle}>Apply for this opportunity</h3>
 
-                <label className={styles.label}>Your Phone Number (+91)</label>
-                <input
-                  type="tel"
-                  className={styles.input}
-                  value={applicantPhone}
-                  onChange={(e) => setApplicantPhone(e.target.value)}
-                  placeholder="10-digit number"
-                  required
-                />
-                <label className={styles.label}>
-                  Short message (optional)
-                </label>
-                <textarea
-                  value={coverMessage}
-                  onChange={(e) => setCoverMessage(e.target.value)}
-                  className={styles.textarea}
-                  placeholder="Tell the provider why you're a good fit..."
-                  rows={4}
-                />
+      <label className={styles.label}>Your Phone Number (+91)</label>
+      <input
+        type="tel"
+        className={styles.input}
+        value={applicantPhone}
+        onChange={(e) => setApplicantPhone(e.target.value)}
+        placeholder="10-digit number"
+        required
+      />
 
-                {message && (
-                  <p
-                    className={
-                      message.includes("success") || message.includes("submitted")
-                        ? styles.successMsg
-                        : styles.errorMsg
-                    }
-                  >
-                    {message}
-                  </p>
-                )}
+      <label className={styles.label}>Short message (optional)</label>
+      <textarea
+        value={coverMessage}
+        onChange={(e) => setCoverMessage(e.target.value)}
+        className={styles.textarea}
+        placeholder="Tell the provider why you're a good fit..."
+        rows={4}
+      />
 
-<button
-  type="button"
-  onClick={handleApply}
-  className={styles.applyBtn}
-  disabled={applying}
->
-  {applying ? "Submitting…" : "Submit Application"}
-</button>
-              </>
-            )}
-          </section>
+      {message && (
+        <p
+          className={
+            message.includes("success") || message.includes("submitted")
+              ? styles.successMsg
+              : styles.errorMsg
+          }
+        >
+          {message}
+        </p>
+      )}
+
+      <button
+        type="button"
+        onClick={handleApply}
+        className={styles.applyBtn}
+        disabled={applying}
+      >
+        {applying ? "Submitting…" : "Submit Application"}
+      </button>
+    </>
+  )}
+</section>
         </div>
       </main>
 
