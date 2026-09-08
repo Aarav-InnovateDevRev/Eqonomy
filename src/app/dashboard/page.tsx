@@ -192,6 +192,7 @@ export default function DashboardPage() {
   </a>
   <Link href="/dashboard/wallet">Wallet</Link>
   <Link href="/dashboard/create">Post</Link>
+  <Link href="/dashboard/portfolio">Portfolio</Link>
   <Link href="/dashboard/notifications">Alerts</Link>
   <Link href="/dashboard/profile">Profile</Link>
 </nav>

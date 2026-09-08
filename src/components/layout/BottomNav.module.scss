@@ -80,10 +80,11 @@
   font-size: 1.05rem;
 
   &[data-icon="feed"]::before { content: "☰"; }
-  &[data-icon="aura"]::before { content: "✦"; }
+  &[data-icon="aura"]::before { content: "🌱"; }
   &[data-icon="add"]::before { content: ""; }
   &[data-icon="wallet"]::before { content: "₹"; }
   &[data-icon="bell"]::before { content: "🔔"; }
+  &[data-icon="portfolio"]::before { content: "📁"; }
   &[data-icon="profile"]::before { content: "👤"; }
 }
 
