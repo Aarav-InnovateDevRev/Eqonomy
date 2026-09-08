@@ -276,8 +276,7 @@ export default function DashboardPage() {
     </Link>
   </div>
 
-  {opportunities
-  .filter((opp) => {
+  {filteredOpportunities.map((opp) => {
     // 1. Category filter
     if (activeFilter !== "all" && opp.type !== activeFilter) {
       return false;
@@ -308,7 +307,7 @@ export default function DashboardPage() {
     </div>
   ) : (
     <div className={styles.feed}>
-      {opportunities
+      {filteredOpportunities
         .filter((opp) => {
           if (!searchQuery.trim()) return true;
           const q = searchQuery.toLowerCase();
