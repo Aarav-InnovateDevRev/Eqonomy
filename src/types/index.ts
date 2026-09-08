@@ -59,6 +59,8 @@ export interface UserProfile {
   entityType?: ProviderEntityType;
   verificationStatus: VerificationStatus;
   organizationName?: string;
+  isEmailVerified?: boolean;
+  isPhoneVerified?: boolean;
   createdAt: number;
   updatedAt: number;
   completedOpportunitiesCount: number;
@@ -71,7 +73,7 @@ export interface UserProfile {
   age?: number;                     // calculated
   isGovtVerified: boolean;
   parentPhone?: string;
- parentVerified: boolean;
+  parentVerified: boolean;
 }
 
 export interface Opportunity {
