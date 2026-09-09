@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { requestNotificationPermission } from "@/lib/notifications";
+import AiAgent from "@/components/AiAgent";
 import Link from "next/link";
 import { User } from "firebase/auth";
 import {
@@ -371,6 +372,7 @@ export default function DashboardPage() {
   </Link>
   .
 </p>
+      <AiAgent opportunities={opportunities} />
 
       <BottomNav />
     </>
