@@ -89,47 +89,105 @@ export default function PaymentPage() {
   const eqonomyAmount = totalAmount - seekerAmount; // remaining 10%
 
   const handlePaid = async () => {
-    if (!user) return;
-    setSubmitting(true);
-    setMessage("");
+  if (!user) return;
+  setSubmitting(true);
+  setMessage("");
 
-    try {
-      // Update application
-      await updateDoc(doc(db, "applications", applicationId), {
-        status: "paid",
-        paidAmount: totalAmount,
-        seekerAmount,
-        platformFee: eqonomyAmount,
-        paidAt: serverTimestamp(),
+  try {
+    const appRef = doc(db, "applications", applicationId);
+    const appSnap = await getDoc(appRef);
+
+    if (!appSnap.exists()) {
+      setMessage("Application not found");
+      setSubmitting(false);
+      return;
+    }
+
+    const appData = appSnap.data();
+    const seekerId = appData.seekerId;
+    const providerId = user.uid;
+
+    // 1. Update application status
+    await updateDoc(appRef, {
+      status: "paid",
+      paidAmount: totalAmount,
+      seekerAmount,
+      platformFee: eqonomyAmount,
+      paidAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+
+    // 2. Credit Seeker wallet (90%)
+    if (seekerId && seekerAmount > 0) {
+      const seekerRef = doc(db, "users", seekerId);
+      const seekerSnap = await getDoc(seekerRef);
+      const currentBalance = seekerSnap.exists()
+        ? seekerSnap.data().walletBalance || 0
+        : 0;
+
+      await updateDoc(seekerRef, {
+        walletBalance: currentBalance + seekerAmount,
         updatedAt: serverTimestamp(),
       });
 
-      // Notify seeker
-      const appSnap = await getDoc(doc(db, "applications", applicationId));
-      const seekerId = appSnap.data()?.seekerId;
-
-      if (seekerId) {
-        await addDoc(collection(db, "notifications"), {
-          userId: seekerId,
-          title: "Payment completed!",
-          body: `You have received payment for "${opportunityTitle}". Amount: ₹${seekerAmount}`,
-          type: "payment",
-          read: false,
-          createdAt: serverTimestamp(),
-        });
-      }
-
-      setMessage("Payment recorded successfully!");
-      setTimeout(() => {
-        router.push("/dashboard");
-      }, 2000);
-    } catch (err) {
-      console.error(err);
-      setMessage("Failed to record payment. Please try again.");
-    } finally {
-      setSubmitting(false);
+      // Seeker credit transaction
+      await addDoc(collection(db, "transactions"), {
+        userId: seekerId,
+        type: "credit",
+        amount: seekerAmount,
+        description: `Payment received for "${opportunityTitle}"`,
+        applicationId,
+        createdAt: serverTimestamp(),
+      });
     }
-  };
+
+    // 3. Provider debit transaction (full amount they paid out)
+    if (totalAmount > 0) {
+      await addDoc(collection(db, "transactions"), {
+        userId: providerId,
+        type: "debit",
+        amount: totalAmount,
+        description: `Paid for "${opportunityTitle}" (incl. platform fee)`,
+        applicationId,
+        createdAt: serverTimestamp(),
+      });
+    }
+
+    // 4. Platform fee record (optional tracking under a system note)
+    if (eqonomyAmount > 0) {
+      await addDoc(collection(db, "transactions"), {
+        userId: providerId,
+        type: "fee",
+        amount: eqonomyAmount,
+        description: `Eqonomy platform fee (10%) for "${opportunityTitle}"`,
+        applicationId,
+        createdAt: serverTimestamp(),
+      });
+    }
+
+    // 5. Notify seeker
+    if (seekerId) {
+      await addDoc(collection(db, "notifications"), {
+        userId: seekerId,
+        title: "Payment received!",
+        body: `You received ₹${seekerAmount} for "${opportunityTitle}". Check your Wallet.`,
+        type: "payment",
+        read: false,
+        createdAt: serverTimestamp(),
+      });
+    }
+
+    setMessage("Payment recorded successfully!");
+    setTimeout(() => {
+      router.push("/dashboard/wallet");
+    }, 1500);
+  } catch (err) {
+    console.error(err);
+    setMessage("Failed to record payment. Please try again.");
+  } finally {
+    setSubmitting(false);
+  }
+};
 
   if (loading) {
     return (

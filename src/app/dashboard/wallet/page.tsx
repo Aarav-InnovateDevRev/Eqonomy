@@ -4,7 +4,13 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { User } from "firebase/auth";
-import { doc, updateDoc, collection, addDoc, serverTimestamp, query, where, orderBy, onSnapshot } from "firebase/firestore";
+import {
+  collection,
+  query,
+  where,
+  orderBy,
+  onSnapshot,
+} from "firebase/firestore";
 import BottomNav from "@/components/layout/BottomNav";
 import { subscribeToAuth, ensureUserProfile } from "@/lib/auth";
 import { db } from "@/lib/firebase";
@@ -13,11 +19,13 @@ import styles from "./wallet.module.scss";
 
 interface Transaction {
   id: string;
-  type: "credit" | "debit" | "fee" | "redeem";
+  type: "credit" | "debit" | "fee" | "support";
   amount: number;
   description: string;
   createdAt: number;
 }
+
+const FOUNDER_UPI_PHONE = "8285757406";
 
 export default function WalletPage() {
   const router = useRouter();
@@ -25,8 +33,6 @@ export default function WalletPage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
-  const [processing, setProcessing] = useState(false);
-  const [message, setMessage] = useState("");
 
   useEffect(() => {
     const unsubscribe = subscribeToAuth(async (firebaseUser) => {
@@ -47,7 +53,7 @@ export default function WalletPage() {
     return () => unsubscribe();
   }, [router]);
 
-  // Load transactions
+  // Live transactions
   useEffect(() => {
     if (!user) return;
 
@@ -59,10 +65,10 @@ export default function WalletPage() {
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const list: Transaction[] = [];
-      snapshot.forEach((doc) => {
-        const data = doc.data();
+      snapshot.forEach((docSnap) => {
+        const data = docSnap.data();
         list.push({
-          id: doc.id,
+          id: docSnap.id,
           type: data.type,
           amount: data.amount,
           description: data.description,
@@ -74,68 +80,6 @@ export default function WalletPage() {
 
     return () => unsubscribe();
   }, [user]);
-
-  const handleAddMoney = async (amount: number) => {
-    if (!user || !profile) return;
-    setProcessing(true);
-    setMessage("");
-
-    try {
-      const newBalance = (profile.walletBalance || 0) + amount;
-
-      await updateDoc(doc(db, "users", user.uid), {
-        walletBalance: newBalance,
-        updatedAt: Date.now(),
-      });
-
-      await addDoc(collection(db, "transactions"), {
-        userId: user.uid,
-        type: "credit",
-        amount,
-        description: `Added ₹${amount} to wallet`,
-        createdAt: serverTimestamp(),
-      });
-
-      setProfile({ ...profile, walletBalance: newBalance });
-      setMessage(`₹${amount} added successfully!`);
-    } catch (err) {
-      console.error(err);
-      setMessage("Failed to add money. Try again.");
-    } finally {
-      setProcessing(false);
-    }
-  };
-
-  const handleRedeem = async () => {
-    if (!user || !profile || (profile.walletBalance || 0) <= 0) return;
-    setProcessing(true);
-    setMessage("");
-
-    try {
-      const amount = profile.walletBalance || 0;
-
-      await updateDoc(doc(db, "users", user.uid), {
-        walletBalance: 0,
-        updatedAt: Date.now(),
-      });
-
-      await addDoc(collection(db, "transactions"), {
-        userId: user.uid,
-        type: "redeem",
-        amount,
-        description: `Redeemed ₹${amount}`,
-        createdAt: serverTimestamp(),
-      });
-
-      setProfile({ ...profile, walletBalance: 0 });
-      setMessage(`₹${amount} redemption requested!`);
-    } catch (err) {
-      console.error(err);
-      setMessage("Redemption failed. Try again.");
-    } finally {
-      setProcessing(false);
-    }
-  };
 
   if (loading) {
     return (
@@ -161,49 +105,29 @@ export default function WalletPage() {
         </header>
 
         <div className={styles.content}>
-          {/* Balance Card */}
+          {/* Balance Card – same UI */}
           <section className={styles.balanceCard}>
             <p className={styles.balanceLabel}>Available Balance</p>
-            <h2 className={styles.balanceAmount}>₹{balance.toLocaleString("en-IN")}</h2>
-            <p className={styles.balanceNote}>All payments for work & guidance happen inside Eqonomy</p>
-          </section>
-
-          {/* Actions */}
-          <section className={styles.actions}>
-            <button
-              className={styles.addBtn}
-              onClick={() => handleAddMoney(500)}
-              disabled={processing}
-            >
-              {processing ? "Processing…" : "Add ₹500 (Test)"}
-            </button>
-            <button
-              className={styles.redeemBtn}
-              onClick={handleRedeem}
-              disabled={processing || balance <= 0}
-            >
-              Redeem All
-            </button>
-          </section>
-
-          {message && (
-            <p className={message.includes("success") || message.includes("Added") || message.includes("redemption") ? styles.successMsg : styles.errorMsg}>
-              {message}
+            <h2 className={styles.balanceAmount}>
+              ₹{balance.toLocaleString("en-IN")}
+            </h2>
+            <p className={styles.balanceNote}>
+              Payments from completed work appear here after the provider
+              confirms payment.
             </p>
-          )}
+          </section>
 
-          {/* Info */}
+          {/* How it works – updated, no demo deposit */}
           <section className={styles.infoCard}>
             <h3>How it works</h3>
             <ul>
-              <li>Add money to your Eqonomy wallet</li>
-              <li>Pay for guidance or release payments for completed work</li>
-              <li>Eqonomy keeps 10% platform fee on paid transactions</li>
-              <li>Redeem remaining balance anytime</li>
+              <li>When a provider pays you for completed work, your 90% is recorded here</li>
+              <li>Eqonomy’s 10% platform fee is tracked separately</li>
+              <li>No demo top-ups — only real payment confirmations</li>
             </ul>
           </section>
 
-          {/* Transactions */}
+          {/* Transactions – same UI */}
           <section className={styles.transactions}>
             <h3>Recent Transactions</h3>
             {transactions.length === 0 ? (
@@ -224,15 +148,30 @@ export default function WalletPage() {
                     </div>
                     <span
                       className={`${styles.txAmount} ${
-                        tx.type === "credit" ? styles.credit : styles.debit
+                        tx.type === "credit" || tx.type === "support"
+                          ? styles.credit
+                          : styles.debit
                       }`}
                     >
-                      {tx.type === "credit" ? "+" : "-"}₹{tx.amount}
+                      {tx.type === "debit" ? "-" : "+"}₹{tx.amount}
                     </span>
                   </div>
                 ))}
               </div>
             )}
+          </section>
+
+          {/* Support founder – small area at bottom */}
+          <section className={styles.supportCard}>
+            <p className={styles.supportText}>
+              You can support me by giving feedback or paying any generous
+              amount you like, OR simply by using Eqonomy nicely 😄
+            </p>
+            <p className={styles.supportUpi}>
+              Support via UPI / PhonePe / GPay:
+              <br />
+              <strong>+91 {FOUNDER_UPI_PHONE}</strong>
+            </p>
           </section>
         </div>
       </main>
