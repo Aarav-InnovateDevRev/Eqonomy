@@ -176,7 +176,7 @@ export default function RegisterPage() {
         verificationStatus: "email_verified",
         walletBalance: 0,
         completedOpportunitiesCount: 0,
-        reputationScore: 50,
+        reputationScore: 0,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });

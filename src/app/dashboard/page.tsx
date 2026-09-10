@@ -173,8 +173,8 @@ export default function DashboardPage() {
   },
   {
     label: "Reputation",
-    value: String(profile?.reputationScore ?? 50),
-    trend: (profile?.reputationScore ?? 50) > 50 ? "Growing" : "New member",
+    value: String(profile?.reputationScore ?? 0),
+    trend: (profile?.reputationScore ?? 0) > 0 ? "Growing" : "New member",
   },
 ];
 

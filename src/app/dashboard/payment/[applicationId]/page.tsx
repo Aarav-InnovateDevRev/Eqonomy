@@ -149,7 +149,7 @@ export default function PaymentPage() {
       });
     }
 
-    // 3. Provider debit transaction (full amount they paid out)
+    // 4. Provider debit transaction (full amount they paid out)
     if (totalAmount > 0) {
       await addDoc(collection(db, "transactions"), {
         userId: providerId,
@@ -161,7 +161,7 @@ export default function PaymentPage() {
       });
     }
 
-    // 4. Platform fee record (optional tracking under a system note)
+    // 5. Platform fee record (optional tracking under a system note)
     if (eqonomyAmount > 0) {
       await addDoc(collection(db, "transactions"), {
         userId: providerId,
@@ -173,7 +173,35 @@ export default function PaymentPage() {
       });
     }
 
-    // 5. Notify seeker
+    // 6. Seeker reputation score update 
+    
+    // Increase Seeker reputation (+5)
+if (seekerId) {
+  const seekerRef = doc(db, "users", seekerId);
+  const seekerSnap = await getDoc(seekerRef);
+  const seekerRep = seekerSnap.exists()
+    ? seekerSnap.data().reputationScore || 0
+    : 0;
+
+  await updateDoc(seekerRef, {
+    reputationScore: seekerRep + 5,
+    updatedAt: serverTimestamp(),
+  });
+}
+
+// Increase Provider reputation (+2)
+const providerRef = doc(db, "users", providerId);
+const providerSnap = await getDoc(providerRef);
+const providerRep = providerSnap.exists()
+  ? providerSnap.data().reputationScore || 0
+  : 0;
+
+await updateDoc(providerRef, {
+  reputationScore: providerRep + 2,
+  updatedAt: serverTimestamp(),
+});
+
+    // 7. Notify seeker
     if (seekerId) {
       await addDoc(collection(db, "notifications"), {
         userId: seekerId,
