@@ -116,8 +116,16 @@ export default function PaymentPage() {
       paidAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     });
+    
+    // 2. Close the opportunity so it leaves the feed
+    if (appData.opportunityId) {
+      await updateDoc(doc(db, "opportunities", appData.opportunityId), {
+       status: "closed",
+       updatedAt: serverTimestamp(),
+    });
+    }
 
-    // 2. Credit Seeker wallet (90%)
+    // 3. Credit Seeker wallet (90%)
     if (seekerId && seekerAmount > 0) {
       const seekerRef = doc(db, "users", seekerId);
       const seekerSnap = await getDoc(seekerRef);

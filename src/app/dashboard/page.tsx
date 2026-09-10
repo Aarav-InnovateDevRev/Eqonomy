@@ -9,6 +9,7 @@ import { User } from "firebase/auth";
 import {
   collection,
   query,
+  where,
   orderBy,
   onSnapshot,
   Timestamp,
@@ -26,6 +27,8 @@ export default function DashboardPage() {
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [myApplicationsCount, setMyApplicationsCount] = useState(0);
+  const [completedCount, setCompletedCount] = useState(0);
   const [activeFilter, setActiveFilter] = useState("all");
 
   // Auth + Profile
@@ -51,6 +54,34 @@ export default function DashboardPage() {
     return () => unsubscribe();
   }, [router]);
 
+  useEffect(() => {
+  if (!user) return;
+
+  // Your applications count
+  const appQ = query(
+    collection(db, "applications"),
+    where("seekerId", "==", user.uid)
+  );
+  const unsubApps = onSnapshot(appQ, (snap) => {
+    setMyApplicationsCount(snap.size);
+  });
+
+  // Completed / paid applications (as seeker)
+  const completedQ = query(
+    collection(db, "applications"),
+    where("seekerId", "==", user.uid),
+    where("status", "in", ["completed", "paid"])
+  );
+  const unsubCompleted = onSnapshot(completedQ, (snap) => {
+    setCompletedCount(snap.size);
+  });
+
+  return () => {
+    unsubApps();
+    unsubCompleted();
+  };
+}, [user]);
+
   // Real-time opportunities from Firestore
   useEffect(() => {
     const q = query(
@@ -63,32 +94,42 @@ export default function DashboardPage() {
       (snapshot) => {
         const list: Opportunity[] = [];
 
-        snapshot.forEach((doc) => {
-          const data = doc.data();
-          list.push({
-            id: doc.id,
-            providerId: data.providerId,
-            providerName: data.providerName,
-            type: data.type,
-            title: data.title,
-            description: data.description,
-            skillsRequired: data.skillsRequired || [],
-            location: data.location,
-            isRemote: data.isRemote || false,
-            compensation: data.compensation,
-            duration: data.duration,
-            status: data.status,
-            createdAt:
-              data.createdAt instanceof Timestamp
-                ? data.createdAt.toMillis()
-                : Date.now(),
-            updatedAt:
-              data.updatedAt instanceof Timestamp
-                ? data.updatedAt.toMillis()
-                : Date.now(),
-            applicationCount: data.applicationCount || 0,
-          });
-        });
+        snapshot.forEach((docSnap) => {
+  const data = docSnap.data();
+
+  // Skip closed / paid / completed opportunities
+  if (
+    data.status === "closed" ||
+    data.status === "paid" ||
+    data.status === "completed"
+  ) {
+    return;
+  }
+
+  list.push({
+    id: docSnap.id,
+    providerId: data.providerId,
+    providerName: data.providerName,
+    type: data.type,
+    title: data.title,
+    description: data.description,
+    skillsRequired: data.skillsRequired || [],
+    location: data.location,
+    isRemote: data.isRemote || false,
+    compensation: data.compensation,
+    duration: data.duration,
+    status: data.status,
+    createdAt:
+      data.createdAt instanceof Timestamp
+        ? data.createdAt.toMillis()
+        : Date.now(),
+    updatedAt:
+      data.updatedAt instanceof Timestamp
+        ? data.updatedAt.toMillis()
+        : Date.now(),
+    applicationCount: data.applicationCount || 0,
+  });
+});
 
         setOpportunities(list);
         setLoading(false);
@@ -115,27 +156,27 @@ export default function DashboardPage() {
         });
 
   const stats = [
-    {
-      label: "Open Opportunities",
-      value: String(opportunities.length),
-      trend: opportunities.length > 0 ? "Live now" : "None yet",
-    },
-    {
-      label: "Your Applications",
-      value: "0",
-      trend: "Coming soon",
-    },
-    {
-      label: "Completed",
-      value: "0",
-      trend: "Start your first",
-    },
-    {
-      label: "Reputation",
-      value: String(profile?.reputationScore || 50),
-      trend: "New member",
-    },
-  ];
+  {
+    label: "Open Opportunities",
+    value: String(opportunities.length),
+    trend: opportunities.length > 0 ? "Live now" : "None yet",
+  },
+  {
+    label: "Your Applications",
+    value: String(myApplicationsCount),
+    trend: myApplicationsCount > 0 ? "Submitted" : "None yet",
+  },
+  {
+    label: "Completed",
+    value: String(completedCount),
+    trend: completedCount > 0 ? "Well done" : "Start your first",
+  },
+  {
+    label: "Reputation",
+    value: String(profile?.reputationScore ?? 50),
+    trend: (profile?.reputationScore ?? 50) > 50 ? "Growing" : "New member",
+  },
+];
 
   const formatType = (type: string) => {
     const map: Record<string, string> = {
