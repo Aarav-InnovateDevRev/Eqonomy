@@ -30,6 +30,7 @@ export default function DashboardPage() {
   const [myApplicationsCount, setMyApplicationsCount] = useState(0);
   const [completedCount, setCompletedCount] = useState(0);
   const [activeFilter, setActiveFilter] = useState("all");
+  const [unreadCount, setUnreadCount] = useState(0);
 
   // Auth + Profile
   useEffect(() => {
@@ -53,6 +54,27 @@ export default function DashboardPage() {
 
     return () => unsubscribe();
   }, [router]);
+
+  useEffect(() => {
+  if (!user) {
+    setUnreadCount(0);
+    return;
+  }
+
+  const q = query(
+    collection(db, "notifications"),
+    where("userId", "==", user.uid),
+    where("read", "==", false)
+  );
+
+  const unsub = onSnapshot(
+    q,
+    (snap) => setUnreadCount(snap.size),
+    () => setUnreadCount(0)
+  );
+
+  return () => unsub();
+}, [user]);
 
   useEffect(() => {
   if (!user) return;
@@ -103,6 +125,19 @@ export default function DashboardPage() {
     data.status === "paid" ||
     data.status === "completed"
   ) {
+    return;
+  }
+
+  // Skip opportunities older than 2 months
+  const created =
+    data.createdAt instanceof Timestamp
+      ? data.createdAt.toMillis()
+      : typeof data.createdAt === "number"
+      ? data.createdAt
+      : Date.now();
+
+  const twoMonthsMs = 60 * 24 * 60 * 60 * 1000; // ~60 days
+  if (Date.now() - created > twoMonthsMs) {
     return;
   }
 
@@ -235,7 +270,14 @@ export default function DashboardPage() {
   <Link href="/dashboard/wallet">Wallet</Link>
   <Link href="/dashboard/create">Post</Link>
   <Link href="/dashboard/portfolio">Portfolio</Link>
-  <Link href="/dashboard/notifications">Alerts</Link>
+  <Link href="/dashboard/notifications">
+  Alerts
+  {unreadCount > 0 && (
+    <span className={styles.navBadge}>
+      {unreadCount > 9 ? "9+" : unreadCount}
+    </span>
+  )}
+</Link>
   <Link href="/dashboard/profile">Profile</Link>
 </nav>
 

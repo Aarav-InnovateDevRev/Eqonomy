@@ -34,7 +34,7 @@ for (const token of tokens) {
   token,
   notification: {
     title: "Eqonomy Daily · Delhi-NCR",
-    body: "Fresh opportunities are live. Open Eqonomy and find your next project, guidance session or challenge.",
+    body: "Fresh opportunities are live 🔥🔥🌱. Open Eqonomy and find your next project, guidance session or challenge.",
   },
   data: {
     url: "/dashboard",
