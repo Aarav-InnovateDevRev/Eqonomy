@@ -11,7 +11,15 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "Eqonomy — Want to do It?",
-  description: "Airbnb-inspired opportunity marketplace. Delhi-first. Hosts-first.",
+  description: "Opportunity marketplace for Delhi-NCR",
+  verification: {
+    google: "_KZ7B38UF0svDckvuof9fhQPc_JxjnOUbYBJ7gi1ELY",
+  },
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+  },
+  manifest: "/manifest.json",
   icons: {
     icon: "/favicon.png",          
     apple: "/favicon.png",
