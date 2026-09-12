@@ -320,11 +320,25 @@ export default function ProfilePage() {
           </form>
 
           <section className={styles.card}>
-            <h3 className={styles.sectionTitle}>Account</h3>
-            <button onClick={handleSignOut} className={styles.signOutBtn}>
-              Sign Out
-            </button>
-          </section>
+  <h3 className={styles.sectionTitle}>Account</h3>
+
+  <Link
+    href="/dashboard/clients"
+    className={styles.saveBtn}
+    style={{
+      display: "block",
+      textAlign: "center",
+      marginBottom: "0.75rem",
+      textDecoration: "none",
+    }}
+  >
+    My Clients
+  </Link>
+
+  <button onClick={handleSignOut} className={styles.signOutBtn}>
+    Sign Out
+  </button>
+</section>
         </div>
       </main>
 

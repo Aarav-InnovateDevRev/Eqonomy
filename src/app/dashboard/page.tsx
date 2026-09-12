@@ -270,6 +270,7 @@ export default function DashboardPage() {
   <Link href="/dashboard/wallet">Wallet</Link>
   <Link href="/dashboard/create">Post</Link>
   <Link href="/dashboard/portfolio">Portfolio</Link>
+  <Link href="/dashboard/clients">Clients</Link>
   <Link href="/dashboard/notifications">
   Alerts
   {unreadCount > 0 && (
