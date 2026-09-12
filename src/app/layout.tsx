@@ -10,8 +10,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Eqonomy — Want to do It?",
-  description: "Opportunity marketplace for Delhi-NCR",
+  title: "Eqonomy | Opportunities, Internships & Guidance in Delhi-NCR",
+  description: "Find paid projects, internships, challenges and guidance sessions in Delhi-NCR. Built for students and young professionals.",
   verification: {
     google: "_KZ7B38UF0svDckvuof9fhQPc_JxjnOUbYBJ7gi1ELY",
   },
