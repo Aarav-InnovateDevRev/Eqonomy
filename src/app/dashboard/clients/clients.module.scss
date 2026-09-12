@@ -1,0 +1,180 @@
+.page {
+  min-height: 100vh;
+  background: #f1f5f9;
+  padding-bottom: 90px;
+}
+
+.header {
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 0.9rem 0;
+}
+
+.headerInner {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  h1 {
+    font-size: 1.15rem;
+    font-weight: 700;
+  }
+}
+
+.back {
+  color: #64748b;
+  text-decoration: none;
+  font-size: 0.95rem;
+
+  &:hover {
+    color: #2563eb;
+  }
+}
+
+.content {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1.3rem 1.2rem;
+}
+
+.card {
+  background: white;
+  border-radius: 16px;
+  padding: 1.2rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+}
+
+.sectionTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.hint {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-bottom: 0.8rem;
+}
+
+.addRow {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.at {
+  font-weight: 700;
+  color: #64748b;
+}
+
+.input {
+  flex: 1;
+  padding: 0.75rem 0.9rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  background: #f8fafc;
+
+  &:focus {
+    outline: none;
+    border-color: #2563eb;
+    background: white;
+  }
+}
+
+.addBtn {
+  padding: 0.75rem 1rem;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.6;
+  }
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid #f1f5f9;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.name {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.id {
+  font-size: 0.82rem;
+  color: #64748b;
+}
+
+.actions {
+  display: flex;
+  gap: 0.45rem;
+}
+
+.dmBtn {
+  padding: 0.4rem 0.7rem;
+  border-radius: 8px;
+  border: 1.5px solid #e2e8f0;
+  background: #f8fafc;
+  color: #94a3b8;
+  font-size: 0.8rem;
+  cursor: not-allowed;
+}
+
+.unfollowBtn {
+  padding: 0.4rem 0.7rem;
+  border-radius: 8px;
+  border: 1.5px solid #fecaca;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.empty {
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.success {
+  color: #059669;
+  font-size: 0.88rem;
+  margin-top: 0.6rem;
+}
+
+.error {
+  color: #dc2626;
+  font-size: 0.88rem;
+  margin-top: 0.6rem;
+}
+
+.loadingScreen {
+  min-height: 50vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+}

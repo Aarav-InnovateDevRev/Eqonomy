@@ -55,6 +55,7 @@ export interface UserProfile {
   delhiDistrict?: string;
   skills: string[];
   isMinor: boolean;
+  eqonomyId?: string; // unique public ID like "aarav_singh"
   auraTrackUrl?: string;
   entityType?: ProviderEntityType;
   verificationStatus: VerificationStatus;

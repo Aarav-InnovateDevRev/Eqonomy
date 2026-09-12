@@ -14,6 +14,7 @@ import {
   where,
   getDocs,
   updateDoc,
+  deleteDoc,
   serverTimestamp,
   Timestamp,
   increment,
@@ -34,6 +35,7 @@ export default function OpportunityDetailPage() {
   const [opportunity, setOpportunity] = useState<Opportunity | null>(null);
   const [loading, setLoading] = useState(true);
   const [applying, setApplying] = useState(false);
+  const [isClient, setIsClient] = useState(false);
   const [hasApplied, setHasApplied] = useState(false);
   const [message, setMessage] = useState("");
   const [applicantPhone, setApplicantPhone] = useState("");
@@ -91,6 +93,15 @@ export default function OpportunityDetailPage() {
               : Date.now(),
           applicationCount: data.applicationCount || 0,
         });
+
+        if (user && data.providerId && user.uid !== data.providerId) {
+            const clientSnap = await getDoc(
+            doc(db, "users", user.uid, "clients", data.providerId)
+         );
+         setIsClient(clientSnap.exists());
+         } else {
+         setIsClient(false);
+         }
 
         const q = query(
           collection(db, "applications"),
@@ -167,6 +178,17 @@ export default function OpportunityDetailPage() {
     setApplying(false);
   }
 };
+
+const handleUnfollowProvider = async () => {
+  if (!user || !opportunity) return;
+  try {
+    await deleteDoc(doc(db, "users", user.uid, "clients", opportunity.providerId));
+    setIsClient(false);
+  } catch (err) {
+    console.error(err);
+  }
+};
+
   const formatType = (type: string) => {
     const map: Record<string, string> = {
       paid_project: "Paid Project",
@@ -227,6 +249,15 @@ export default function OpportunityDetailPage() {
 
             <h2 className={styles.title}>{opportunity.title}</h2>
             <p className={styles.provider}>Posted by {opportunity.providerName}</p>
+            {isClient && (
+               <button
+                 type="button"
+                 onClick={handleUnfollowProvider}
+                 className={styles.unfollowSmall}
+               >
+                    Unfollow
+              </button>
+            )}
 
             <div className={styles.meta}>
               <div>
