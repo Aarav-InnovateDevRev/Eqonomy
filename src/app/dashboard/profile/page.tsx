@@ -69,9 +69,15 @@ export default function ProfilePage() {
       .replace(/[^a-z0-9_]/g, "");
 
   const handleSaveId = async () => {
-    if (!user || !profile) return;
+  if (!user || !profile) return;
 
-    const nextId = normalizeId(eqonomyIdInput);
+  // ID is permanent once set
+  if (profile.eqonomyId) {
+    setIdMessage("Your Eqonomy ID is permanent and cannot be changed.");
+    return;
+  }
+
+  const nextId = normalizeId(eqonomyIdInput);
 
     if (nextId.length < 3 || nextId.length > 20) {
       setIdMessage("ID must be 3–20 characters (letters, numbers, _)");
@@ -206,48 +212,62 @@ export default function ProfilePage() {
           </section>
 
           {/* Unique Eqonomy ID */}
-          <section className={styles.card}>
-            <h3 className={styles.sectionTitle}>Eqonomy ID (unique)</h3>
-            <p style={{ fontSize: "0.85rem", color: "#64748b", marginBottom: "0.75rem" }}>
-              This is your public unique ID. Others will add you as a client using this.
-            </p>
+<section className={styles.card}>
+  <h3 className={styles.sectionTitle}>Eqonomy ID (unique)</h3>
+  <p
+    style={{
+      fontSize: "0.85rem",
+      color: "#64748b",
+      marginBottom: "0.75rem",
+    }}
+  >
+    {profile?.eqonomyId
+      ? "Your public ID is permanent and cannot be changed."
+      : "Choose carefully. Once saved, this ID cannot be changed."}
+  </p>
 
-            <label className={styles.label}>Your ID</label>
-            <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-              <span style={{ color: "#64748b", fontWeight: 600 }}>@</span>
-              <input
-                type="text"
-                value={eqonomyIdInput}
-                onChange={(e) => setEqonomyIdInput(e.target.value)}
-                className={styles.input}
-                placeholder="e.g. aarav_singh"
-                style={{ marginBottom: 0 }}
-              />
-            </div>
+  <label className={styles.label}>Your ID</label>
+  <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+    <span style={{ color: "#64748b", fontWeight: 600 }}>@</span>
+    <input
+      type="text"
+      value={eqonomyIdInput}
+      onChange={(e) => {
+        if (!profile?.eqonomyId) setEqonomyIdInput(e.target.value);
+      }}
+      className={styles.input}
+      placeholder="e.g. aarav_singh"
+      style={{ marginBottom: 0 }}
+      disabled={!!profile?.eqonomyId}
+      readOnly={!!profile?.eqonomyId}
+    />
+  </div>
 
-            {idMessage && (
-              <p
-                className={
-                  idMessage.includes("saved") || idMessage.includes("already your")
-                    ? styles.successMsg
-                    : styles.errorMsg
-                }
-                style={{ marginTop: "0.6rem" }}
-              >
-                {idMessage}
-              </p>
-            )}
+  {idMessage && (
+    <p
+      className={
+        idMessage.includes("saved") || idMessage.includes("already your")
+          ? styles.successMsg
+          : styles.errorMsg
+      }
+      style={{ marginTop: "0.6rem" }}
+    >
+      {idMessage}
+    </p>
+  )}
 
-            <button
-              type="button"
-              className={styles.saveBtn}
-              onClick={handleSaveId}
-              disabled={savingId}
-              style={{ marginTop: "0.9rem" }}
-            >
-              {savingId ? "Saving…" : profile?.eqonomyId ? "Update ID" : "Set ID"}
-            </button>
-          </section>
+  {!profile?.eqonomyId && (
+    <button
+      type="button"
+      className={styles.saveBtn}
+      onClick={handleSaveId}
+      disabled={savingId}
+      style={{ marginTop: "0.9rem" }}
+    >
+      {savingId ? "Saving…" : "Set ID"}
+    </button>
+  )}
+</section>
 
           <form onSubmit={handleSave} className={styles.card}>
             <h3 className={styles.sectionTitle}>Basic Info</h3>
