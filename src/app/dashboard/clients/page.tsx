@@ -130,6 +130,36 @@ export default function ClientsPage() {
     }
   };
 
+  const startChat = async (client: ClientItem) => {
+  if (!user) return;
+
+  const ids = [user.uid, client.clientUid].sort();
+  const conversationId = `${ids[0]}_${ids[1]}`;
+
+  const myProfile = await ensureUserProfile(user);
+  const convRef = doc(db, "conversations", conversationId);
+  const existing = await getDoc(convRef);
+
+  if (!existing.exists()) {
+    await setDoc(convRef, {
+      participants: ids,
+      names: {
+        [user.uid]: myProfile.displayName || myProfile.name || "User",
+        [client.clientUid]: client.displayName,
+      },
+      eqonomyIds: {
+        [user.uid]: myProfile.eqonomyId || "",
+        [client.clientUid]: client.eqonomyId,
+      },
+      lastMessage: "",
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+  }
+
+  router.push(`/dashboard/messages/${conversationId}`);
+};
+
   const handleUnfollow = async (clientUid: string) => {
     if (!user) return;
     setWorking(true);
@@ -218,13 +248,13 @@ export default function ClientsPage() {
                       <p className={styles.id}>@{c.eqonomyId}</p>
                     </div>
                     <div className={styles.actions}>
-                      {/* Ready for DM tomorrow */}
+                      
                       <button
                         className={styles.dmBtn}
-                        disabled
-                        title="Coming tomorrow"
+                        onClick={() => startChat(c)}
+                        style={{ color: "#2563eb", cursor: "pointer", borderColor: "#bfdbfe", background: "#eff6ff" }}
                       >
-                        Message
+                         Message
                       </button>
                       <button
                         className={styles.unfollowBtn}

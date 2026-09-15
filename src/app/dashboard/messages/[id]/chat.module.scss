@@ -1,0 +1,127 @@
+.page {
+  min-height: 100vh;
+  background: #f1f5f9;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 70px;
+}
+
+.header {
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 0.9rem 0;
+}
+
+.headerInner {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  h1 {
+    font-size: 1.05rem;
+    font-weight: 700;
+  }
+}
+
+.back {
+  color: #64748b;
+  text-decoration: none;
+  font-size: 0.95rem;
+}
+
+.messages {
+  flex: 1;
+  max-width: 800px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 1rem 1.2rem 5.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  overflow-y: auto;
+}
+
+.emptyChat {
+  text-align: center;
+  color: #94a3b8;
+  margin-top: 2rem;
+}
+
+.bubble {
+  max-width: 78%;
+  padding: 0.7rem 0.95rem;
+  border-radius: 14px;
+  font-size: 0.92rem;
+  line-height: 1.4;
+  white-space: pre-wrap;
+}
+
+.mine {
+  align-self: flex-end;
+  background: #2563eb;
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+
+.theirs {
+  align-self: flex-start;
+  background: white;
+  color: #0f172a;
+  border: 1px solid #e2e8f0;
+  border-bottom-left-radius: 4px;
+}
+
+.inputBar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 64px;
+  background: white;
+  border-top: 1px solid #e2e8f0;
+  padding: 0.7rem 1rem;
+  display: flex;
+  gap: 0.5rem;
+  max-width: 800px;
+  margin: 0 auto;
+  z-index: 30;
+
+  input {
+    flex: 1;
+    padding: 0.75rem 0.9rem;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 0.92rem;
+    background: #f8fafc;
+
+    &:focus {
+      outline: none;
+      border-color: #2563eb;
+      background: white;
+    }
+  }
+
+  button {
+    padding: 0.75rem 1.1rem;
+    background: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.55;
+    }
+  }
+}
+
+.loadingScreen {
+  min-height: 50vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+}
