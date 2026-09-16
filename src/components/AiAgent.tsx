@@ -39,6 +39,18 @@ export default function AiAgent({ opportunities }: Props) {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, open]);
 
+  function formatReply(text: string) {
+  // Basic cleanup for any leftover markdown symbols
+  return text
+    .replace(/\*\*/g, "")
+    .replace(/\*/g, "")
+    .replace(/\|/g, " ")
+    .replace(/-{3,}/g, "")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
   const send = async () => {
     const text = input.trim();
     if (!text || loading) return;
@@ -113,7 +125,7 @@ export default function AiAgent({ opportunities }: Props) {
                   m.role === "user" ? styles.user : styles.assistant
                 }`}
               >
-                {m.content}
+                {m.role === "assistant" ? formatReply(m.content) : m.content}
               </div>
             ))}
             {loading && (
