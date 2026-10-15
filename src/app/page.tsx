@@ -6,33 +6,58 @@ export default function HomePage() {
     <main className={styles.page}>
       {/* Hero */}
       <section className={styles.hero}>
-        <div className={styles.container}>
-          <p className={styles.eyebrow}>Delhi-NCR · Real opportunities</p>
+        <div className={styles.heroGlow} />
+        <div className={styles.heroGrid}>
+          <div className={styles.heroCopy}>
+            <p className={styles.eyebrow}>Delhi-NCR · Real opportunities</p>
 
-          <h1 className={styles.title}>
-            Find work.
-            <span>Build proof.</span>
-            Get selected.
-          </h1>
+            <h1 className={styles.title}>
+              Find work.
+              <span>Build proof.</span>
+              Get selected.
+            </h1>
 
-          <p className={styles.subtitle}>
-            Eqonomy is the opportunity marketplace for students and young
-            people — paid projects, internships, challenges and guidance from
-            real local providers.
-          </p>
+            <p className={styles.subtitle}>
+              Eqonomy is the opportunity marketplace for students and young
+              people — paid projects, internships, challenges and guidance from
+              real local providers.
+            </p>
 
-          <div className={styles.ctaRow}>
-            <Link href="/register" className={styles.btnPrimary}>
-              Get Started
-            </Link>
-            <Link href="/login" className={styles.btnGhost}>
-              Log in
-            </Link>
+            <div className={styles.ctaRow}>
+              <Link href="/register" className={styles.btnPrimary}>
+                Get Started
+              </Link>
+              <Link href="/login" className={styles.btnGhost}>
+                Log in
+              </Link>
+            </div>
+
+            <p className={styles.microNote}>
+              Free to join · Unique Eqonomy ID · Built for beginners and doers
+            </p>
           </div>
 
-          <p className={styles.microNote}>
-            Free to join · Unique Eqonomy ID · Built for beginners and doers
-          </p>
+          <div className={styles.heroVisual}>
+            <div className={styles.visualGlow} />
+
+            <div className={`${styles.floatCard} ${styles.cardOne}`}>
+              <p className={styles.cardLabel}>Paid Project</p>
+              <h3>Digitize grading for Class 9</h3>
+              <p>₹500 · Delhi-NCR</p>
+            </div>
+
+            <div className={`${styles.floatCard} ${styles.cardTwo}`}>
+              <p className={styles.cardLabel}>Guidance</p>
+              <h3>Factory workflow mentoring</h3>
+              <p>₹3,000 · Noida</p>
+            </div>
+
+            <div className={`${styles.floatCard} ${styles.cardThree}`}>
+              <p className={styles.cardLabel}>Internship</p>
+              <h3>Printing shop operations</h3>
+              <p>Free · Local experience</p>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -78,7 +103,9 @@ export default function HomePage() {
       <section className={`${styles.section} ${styles.sectionAlt}`}>
         <div className={styles.container}>
           <p className={styles.sectionLabel}>How it works</p>
-          <h2 className={styles.sectionTitle}>From signup to first opportunity</h2>
+          <h2 className={styles.sectionTitle}>
+            From signup to first opportunity
+          </h2>
 
           <div className={styles.steps}>
             <div className={styles.step}>
@@ -109,14 +136,16 @@ export default function HomePage() {
       <section className={styles.section}>
         <div className={styles.containerNarrow}>
           <p className={styles.sectionLabel}>Built-in guidance</p>
-          <h2 className={styles.sectionTitle}>Eqonomy AI helps you decide faster</h2>
+          <h2 className={styles.sectionTitle}>
+            Eqonomy AI helps you decide faster
+          </h2>
           <p className={styles.bodyText}>
             Once you’re inside, ask Eqonomy AI what fits your skills — paid
             projects, guidance, internships or challenges — based on live
             opportunities, not generic advice.
           </p>
 
-          <div className={styles.ctaRow}>
+          <div className={styles.ctaRowCenter}>
             <Link href="/register" className={styles.btnPrimary}>
               Create free account
             </Link>
