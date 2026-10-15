@@ -58,7 +58,7 @@ export default function FounderFab() {
               </div>
               <div className={styles.row}>
                 <span className={styles.label}>Discord</span>
-                <span className={styles.value}>hi_swift_96631</span>
+                <span className={styles.value}>dontmind_rip</span>
               </div>
             </div>
 
