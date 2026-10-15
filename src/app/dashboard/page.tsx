@@ -449,7 +449,7 @@ export default function DashboardPage() {
       </main>
 
       <p className={styles.disclaimer}>
-  I am a student of Class 9. Any problems should please be reported to my Discord: hi_swift_96631.
+  I am a student of Class 9. Any problems should please be reported to my Discord: dontmind_rip.
   <br />
   By using Eqonomy you agree to our{" "}
   <Link href="/terms" className={styles.termsLink}>

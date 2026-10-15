@@ -82,7 +82,7 @@ export default function TermsPage() {
           <h2 className={styles.sectionTitle}>8. Contact & Reporting Problems</h2>
           <p className={styles.sectionText}>
             If you face any problem, please report it on Discord:{" "}
-            <strong>hi_swift_96631</strong>
+            <strong>dontmind_rip</strong>
           </p>
           <p className={styles.sectionText}>
             Email: s27505@salwanpublicschool.com
