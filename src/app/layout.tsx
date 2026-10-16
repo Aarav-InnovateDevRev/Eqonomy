@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import FounderFab from "@/components/layout/FounderFab";
+import JsonLd from "@/components/JsonLd";
 import "@/styles/globals.scss";
 
 const inter = Inter({
@@ -11,19 +12,39 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "Eqonomy | Opportunities, Internships & Guidance in Delhi-NCR",
-  description: "Find paid projects, internships, challenges and guidance sessions in Delhi-NCR. Built for students and young professionals.",
+  description:
+    "A hyper-local proof-of-work and micro-project marketplace connecting students and freelancers with verified startup tasks in Delhi-NCR.",
   verification: {
     google: "_KZ7B38UF0svDckvuof9fhQPc_JxjnOUbYBJ7gi1ELY",
   },
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
+  metadataBase: new URL("https://eqonomy.vercel.app"),
+  alternates: {
+    canonical: "https://eqonomy.vercel.app",
   },
-  manifest: "/manifest.json",
+  openGraph: {
+    title: "Eqonomy | Opportunities in Delhi-NCR",
+    description:
+      "Find paid projects, internships, challenges and guidance sessions from real local providers.",
+    url: "https://eqonomy.vercel.app",
+    siteName: "Eqonomy",
+    type: "website",
+    locale: "en_IN",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Eqonomy | Opportunities in Delhi-NCR",
+    description:
+      "Find paid projects, internships and guidance sessions in Delhi-NCR.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
   icons: {
-    icon: "/favicon.png",          
+    icon: "/favicon.png",
     apple: "/favicon.png",
   },
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({
@@ -33,6 +54,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={inter.variable}>
+      <head>
+        <JsonLd />
+      </head>
       <body>
         {children}
         <FounderFab />
